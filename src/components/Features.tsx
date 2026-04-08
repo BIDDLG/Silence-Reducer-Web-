@@ -41,7 +41,7 @@ export function Features() {
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Everything you need to clean up audio</h2>
           <p className="text-lg text-slate-600 dark:text-slate-400">
-            Silence Reducer Pro is built for speed and privacy. No complex software to install, just drag, drop, and export.
+            Silencio is built for speed and privacy. No complex software to install, just drag, drop, and export.
           </p>
         </div>
         

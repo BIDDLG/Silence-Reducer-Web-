@@ -29,7 +29,7 @@ export function ContactUs() {
 
         <section className="mt-12">
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-4">Advertising & Partnerships</h2>
-          <p>If you are interested in advertising on Silence Reducer Pro or exploring partnership opportunities, please use the email address above with the subject line "Partnership Inquiry".</p>
+          <p>If you are interested in advertising on Silencio or exploring partnership opportunities, please use the email address above with the subject line "Partnership Inquiry".</p>
         </section>
       </div>
     </div>

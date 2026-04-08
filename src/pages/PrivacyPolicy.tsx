@@ -10,7 +10,7 @@ export function PrivacyPolicy() {
         
         <section>
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">1. Introduction</h2>
-          <p>Welcome to Silence Reducer Pro. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
+          <p>Welcome to Silencio. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website and tell you about your privacy rights and how the law protects you.</p>
         </section>
 
         <section>
@@ -29,13 +29,13 @@ export function PrivacyPolicy() {
 
         <section>
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">4. Cookies and Web Beacons</h2>
-          <p>Like any other website, Silence Reducer Pro uses "cookies". These cookies are used to store information including visitors' preferences, and the pages on the website that the visitor accessed or visited. The information is used to optimize the users' experience by customizing our web page content based on visitors' browser type and/or other information.</p>
+          <p>Like any other website, Silencio uses "cookies". These cookies are used to store information including visitors' preferences, and the pages on the website that the visitor accessed or visited. The information is used to optimize the users' experience by customizing our web page content based on visitors' browser type and/or other information.</p>
           <p>We use Google AdSense to serve ads. Google's use of advertising cookies enables it and its partners to serve ads to our users based on their visit to our sites and/or other sites on the Internet. Users may opt out of personalized advertising by visiting Ads Settings.</p>
         </section>
 
         <section>
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">5. Third-Party Privacy Policies</h2>
-          <p>Silence Reducer Pro's Privacy Policy does not apply to other advertisers or websites. Thus, we are advising you to consult the respective Privacy Policies of these third-party ad servers for more detailed information. It may include their practices and instructions about how to opt-out of certain options.</p>
+          <p>Silencio's Privacy Policy does not apply to other advertisers or websites. Thus, we are advising you to consult the respective Privacy Policies of these third-party ad servers for more detailed information. It may include their practices and instructions about how to opt-out of certain options.</p>
         </section>
 
         <section>

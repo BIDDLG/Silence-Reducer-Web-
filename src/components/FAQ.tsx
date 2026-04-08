@@ -4,7 +4,7 @@ export function FAQ() {
   const faqs = [
     {
       q: "Is it really free?",
-      a: "Yes, Silence Reducer Pro is completely free to use. There are no hidden fees, subscriptions, or watermarks."
+      a: "Yes, Silencio is completely free to use. There are no hidden fees, subscriptions, or watermarks."
     },
     {
       q: "Are my files uploaded to a server?",

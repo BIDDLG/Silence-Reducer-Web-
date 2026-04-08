@@ -9,11 +9,11 @@ export function DMCA() {
         <p>Last updated: April 08, 2026</p>
         
         <section>
-          <p>Silence Reducer Pro respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at <a href="http://www.copyright.gov/legislation/dmca.pdf" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">http://www.copyright.gov/legislation/dmca.pdf</a>, we will respond expeditiously to claims of copyright infringement committed using the Silence Reducer Pro service.</p>
+          <p>Silencio respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at <a href="http://www.copyright.gov/legislation/dmca.pdf" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">http://www.copyright.gov/legislation/dmca.pdf</a>, we will respond expeditiously to claims of copyright infringement committed using the Silencio service.</p>
           
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 p-4 rounded-lg mt-6 mb-6">
             <p className="text-amber-800 dark:text-amber-200 text-sm font-medium m-0">
-              <strong>Important Note:</strong> Silence Reducer Pro is a client-side application. We do not host, store, or distribute any audio files on our servers. All processing is done locally in the user's web browser. Therefore, we cannot remove specific files from our servers as they do not exist there.
+              <strong>Important Note:</strong> Silencio is a client-side application. We do not host, store, or distribute any audio files on our servers. All processing is done locally in the user's web browser. Therefore, we cannot remove specific files from our servers as they do not exist there.
             </p>
           </div>
         </section>

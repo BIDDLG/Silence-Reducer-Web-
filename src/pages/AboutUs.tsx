@@ -6,7 +6,7 @@ export function AboutUs() {
       <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-8">About Us</h1>
       
       <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-300">
-        <p className="text-lg">Welcome to <strong>Silence Reducer Pro</strong>, your number one source for fast, secure, and free audio editing tools.</p>
+        <p className="text-lg">Welcome to <strong>Silencio</strong>, your number one source for fast, secure, and free audio editing tools.</p>
         
         <section>
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">Our Mission</h2>
@@ -25,7 +25,7 @@ export function AboutUs() {
 
         <section>
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">Who We Are</h2>
-          <p>Silence Reducer Pro was built by a passionate team of developers and audio enthusiasts who saw a need for a simpler, more secure way to edit audio online. We are constantly working to improve our algorithms and add new features based on user feedback.</p>
+          <p>Silencio was built by a passionate team of developers and audio enthusiasts who saw a need for a simpler, more secure way to edit audio online. We are constantly working to improve our algorithms and add new features based on user feedback.</p>
         </section>
 
         <section>

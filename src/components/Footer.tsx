@@ -11,11 +11,11 @@ export function Footer() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
             </svg>
           </div>
-          <span className="font-semibold text-slate-200">Silence Reducer Pro</span>
+          <span className="font-semibold text-slate-200">Silencio</span>
         </div>
         
         <div className="text-sm">
-          &copy; {new Date().getFullYear()} Silence Reducer Pro. All rights reserved.
+          &copy; {new Date().getFullYear()} Silencio. All rights reserved.
         </div>
         
         <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm">
