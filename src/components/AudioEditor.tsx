@@ -585,12 +585,20 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     onChange: (v: number) => void,
     format?: (v: number) => string
   }) => (
-    <div className="flex items-center justify-between gap-4 py-2">
-      <label className="text-sm font-medium text-slate-300 w-32 shrink-0">{label}</label>
-      <div className="flex items-center gap-3 flex-1">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-3 border-b border-slate-700/50 last:border-0">
+      <div className="flex justify-between items-center sm:w-32 shrink-0">
+        <label className="text-sm font-medium text-slate-300">{label}</label>
+        <input 
+          type="number" 
+          value={format(value)}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="sm:hidden w-16 bg-slate-900/50 border border-slate-700 rounded px-2 py-1 text-xs text-right text-white focus:outline-none focus:border-indigo-500 font-mono"
+        />
+      </div>
+      <div className="flex items-center gap-3 flex-1 w-full">
         <button 
           onClick={() => onChange(Math.max(min, value - step))}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 hover:bg-slate-700 transition-colors"
+          className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-800 border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 hover:bg-slate-700 transition-colors shadow-sm"
         >
           <Minus className="w-4 h-4" />
         </button>
@@ -601,11 +609,11 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           step={step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 accent-indigo-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+          className="flex-1 accent-indigo-500 h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer"
         />
         <button 
           onClick={() => onChange(Math.min(max, value + step))}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 hover:bg-slate-700 transition-colors"
+          className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-800 border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 hover:bg-slate-700 transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -614,7 +622,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         type="number" 
         value={format(value)}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-20 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-sm text-right text-white focus:outline-none focus:border-indigo-500 font-mono"
+        className="hidden sm:block w-20 bg-slate-900/50 border border-slate-700 rounded px-2 py-1 text-sm text-right text-white focus:outline-none focus:border-indigo-500 font-mono shadow-inner"
       />
     </div>
   );
@@ -813,31 +821,38 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         </div>
 
         {/* Settings Panel (Dark Theme like screenshot) */}
-        <div className="lg:col-span-5 xl:col-span-4 bg-slate-800 text-slate-200 p-5 rounded-2xl shadow-xl border border-slate-700 h-fit">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700">
+        <div className="lg:col-span-5 xl:col-span-4 bg-slate-800/90 backdrop-blur-sm text-slate-200 p-4 sm:p-6 rounded-2xl shadow-2xl border border-slate-700 h-fit ring-1 ring-white/5">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-700/80">
             <h3 className="font-semibold text-white flex items-center gap-2 text-lg">
-              <Scissors className="w-5 h-5 text-indigo-400" />
+              <div className="p-1.5 bg-indigo-500/20 rounded-lg">
+                <Scissors className="w-5 h-5 text-indigo-400" />
+              </div>
               Silence Reduction
             </h3>
-            <button className="text-slate-400 hover:text-white transition-colors">
+            <button className="text-slate-400 hover:text-white transition-colors p-1.5 hover:bg-slate-700 rounded-lg">
               <Info className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 mb-6">
-              <label className="text-sm font-medium text-slate-300 w-20">Presets:</label>
-              <select 
-                value={preset}
-                onChange={(e) => handlePresetChange(e.target.value)}
-                className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-              >
-                <option value="Default">Default</option>
-                <option value="Eliminate all silences">Eliminate all silences</option>
-                <option value="Reduce silences 50%">Reduce silences 50%</option>
-                <option value="Reduce silences to half a second">Reduce silences to half a second</option>
-                <option value="Shorten silences longer than 5 seconds">Shorten silences longer than 5 seconds</option>
-              </select>
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-6 bg-slate-900/30 p-3 sm:p-4 rounded-xl border border-slate-700/50">
+              <label className="text-sm font-medium text-slate-300 w-full sm:w-24 shrink-0">Presets:</label>
+              <div className="flex-1 min-w-0 w-full relative">
+                <select 
+                  value={preset}
+                  onChange={(e) => handlePresetChange(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-600 rounded-lg pl-3 pr-8 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 truncate appearance-none cursor-pointer shadow-sm"
+                >
+                  <option value="Default">Default</option>
+                  <option value="Eliminate all silences">Eliminate all silences</option>
+                  <option value="Reduce silences 50%">Reduce silences 50%</option>
+                  <option value="Reduce silences to half a second">Reduce silences to half a second</option>
+                  <option value="Shorten silences longer than 5 seconds">Shorten silences longer than 5 seconds</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-slate-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+              </div>
             </div>
 
             <ControlRow 
@@ -868,17 +883,17 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               format={(v) => v.toFixed(3)}
             />
 
-            <div className="flex items-center justify-between py-3 border-t border-slate-700 mt-4">
+            <div className="flex items-center justify-between py-4 mt-2">
               <label className="text-sm font-medium text-slate-300">Full crossfade:</label>
               <button 
                 onClick={() => setFullCrossfade(!fullCrossfade)}
                 className={cn(
-                  "w-12 h-6 rounded-full transition-colors relative",
-                  fullCrossfade ? "bg-indigo-500" : "bg-slate-600"
+                  "w-12 h-6 rounded-full transition-colors relative shadow-inner",
+                  fullCrossfade ? "bg-indigo-500" : "bg-slate-700"
                 )}
               >
                 <div className={cn(
-                  "w-4 h-4 rounded-full bg-white absolute top-1 transition-transform",
+                  "w-4 h-4 rounded-full bg-white absolute top-1 transition-transform shadow-sm",
                   fullCrossfade ? "translate-x-7" : "translate-x-1"
                 )} />
               </button>
@@ -904,7 +919,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             <button
               onClick={processAudio}
               disabled={!canProcess || isProcessing}
-              className="w-full mt-6 bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 relative overflow-hidden"
+              className="w-full mt-6 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 relative overflow-hidden active:scale-[0.98]"
             >
               {isProcessing ? (
                 <>
@@ -927,8 +942,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             )}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-700">
-            <h3 className="font-semibold text-slate-300 flex items-center gap-2 mb-4 text-sm">
+          <div className="mt-8 pt-6 border-t border-slate-700/80">
+            <h3 className="font-semibold text-slate-300 flex items-center gap-2 mb-4 text-sm uppercase tracking-wider">
               <Zap className="w-4 h-4 text-indigo-400" />
               Quick Tools
             </h3>
@@ -936,14 +951,14 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <button
                 onClick={normalizeAudio}
                 disabled={!canProcess || isProcessing}
-                className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 font-medium py-2 px-3 rounded-lg border border-slate-600 transition-colors text-sm flex items-center justify-center gap-2"
+                className="bg-slate-900/50 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-medium py-2.5 px-3 rounded-xl border border-slate-600/50 hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
               >
                 Normalize
               </button>
               <button
                 onClick={reverseAudio}
                 disabled={!canProcess || isProcessing}
-                className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 font-medium py-2 px-3 rounded-lg border border-slate-600 transition-colors text-sm flex items-center justify-center gap-2"
+                className="bg-slate-900/50 hover:bg-slate-700 disabled:opacity-50 text-slate-200 font-medium py-2.5 px-3 rounded-xl border border-slate-600/50 hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
               >
                 Reverse
               </button>
