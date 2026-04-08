@@ -234,8 +234,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     const thresholdLinear = Math.pow(10, threshold / 20);
     const minSilenceSamples = silenceDuration * sampleRate;
     
-    // Add a generous padding (e.g., 100ms) to avoid cutting off speech tails or breaths
-    const paddingSamples = Math.floor(sampleRate * 0.1);
+    // Add a small padding (e.g., 40ms) to avoid cutting off speech tails or breaths
+    const paddingSamples = Math.floor(sampleRate * 0.04);
     
     let isSilent = false;
     let silenceStart = 0;
@@ -284,42 +284,48 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         isSilent = false;
         const silenceLen = i - silenceStart;
         
-        // Apply padding: don't cut the very beginning and very end of the silence
-        const paddedStart = Math.min(length, silenceStart + paddingSamples);
-        const paddedEnd = Math.max(0, i - paddingSamples);
-        
-        // Snap to zero crossings to prevent clicks without needing crossfades
-        const zcStart = findZeroCrossing(paddedStart, 1);
-        const zcEnd = findZeroCrossing(paddedEnd, -1);
-        
-        const paddedLen = zcEnd - zcStart;
+        if (silenceLen >= minSilenceSamples) {
+          // Apply padding safely so start and end don't cross
+          const actualPadding = Math.min(paddingSamples, Math.floor(silenceLen / 2));
+          const paddedStart = silenceStart + actualPadding;
+          const paddedEnd = i - actualPadding;
+          
+          // Snap to zero crossings to prevent clicks without needing crossfades
+          const zcStart = findZeroCrossing(paddedStart, 1);
+          const zcEnd = findZeroCrossing(paddedEnd, -1);
+          
+          const finalLen = zcEnd - zcStart;
 
-        if (paddedLen >= minSilenceSamples && zcEnd > zcStart) {
-          silenceRegions.push({ 
-            start: zcStart, 
-            end: zcEnd,
-            originalLength: paddedLen,
-            newLength: 0
-          });
+          if (finalLen > 0) {
+            silenceRegions.push({ 
+              start: zcStart, 
+              end: zcEnd,
+              originalLength: finalLen,
+              newLength: 0
+            });
+          }
         }
       }
     }
 
     if (isSilent) {
       const silenceLen = length - silenceStart;
-      const paddedStart = Math.min(length, silenceStart + paddingSamples);
-      const paddedEnd = length; // End of file, no padding at the very end
-      
-      const zcStart = findZeroCrossing(paddedStart, 1);
-      const paddedLen = paddedEnd - zcStart;
+      if (silenceLen >= minSilenceSamples) {
+        const actualPadding = Math.min(paddingSamples, Math.floor(silenceLen / 2));
+        const paddedStart = silenceStart + actualPadding;
+        const paddedEnd = length; // End of file, no padding at the very end
+        
+        const zcStart = findZeroCrossing(paddedStart, 1);
+        const finalLen = paddedEnd - zcStart;
 
-      if (paddedLen >= minSilenceSamples && paddedEnd > zcStart) {
-        silenceRegions.push({ 
-          start: zcStart, 
-          end: paddedEnd,
-          originalLength: paddedLen,
-          newLength: 0
-        });
+        if (finalLen > 0) {
+          silenceRegions.push({ 
+            start: zcStart, 
+            end: paddedEnd,
+            originalLength: finalLen,
+            newLength: 0
+          });
+        }
       }
     }
 
