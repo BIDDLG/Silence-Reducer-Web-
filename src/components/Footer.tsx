@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
@@ -17,9 +18,11 @@ export function Footer() {
           &copy; {new Date().getFullYear()} Silence Reducer Pro. All rights reserved.
         </div>
         
-        <div className="flex gap-6 text-sm">
-          <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-sm">
+          <Link to="/about" className="hover:text-white transition-colors">About Us</Link>
+          <Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link>
+          <Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+          <Link to="/dmca" className="hover:text-white transition-colors">DMCA</Link>
         </div>
       </div>
     </footer>

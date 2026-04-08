@@ -60,11 +60,11 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
           Select File
         </button>
 
-        <div className="mt-8 flex items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-500 font-medium">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs text-slate-400 dark:text-slate-500 font-medium">
           <span className="flex items-center gap-1"><FileAudio className="w-3 h-3" /> MP3, WAV, M4A, FLAC</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+          <span className="hidden sm:block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
           <span>Up to 500MB</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+          <span className="hidden sm:block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
           <span>100% Private</span>
         </div>
       </div>
