@@ -23,11 +23,33 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   // URL management to avoid "signal is aborted" and memory leaks
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const currentUrlRef = useRef<string | null>(null);
+  const [highQualityBuffer, setHighQualityBuffer] = useState<AudioBuffer | null>(null);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
     setOriginalUrl(url);
+    
+    let isCancelled = false;
+    const decodeFile = async () => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        // Force 44.1kHz to prevent Bluetooth/OS downsampling
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 44100 });
+        const buffer = await ctx.decodeAudioData(arrayBuffer);
+        if (!isCancelled) {
+          setHighQualityBuffer(buffer);
+        }
+        if (ctx.state !== 'closed') {
+          ctx.close();
+        }
+      } catch (e) {
+        console.error("Error decoding high quality buffer", e);
+      }
+    };
+    decodeFile();
+    
     return () => {
+      isCancelled = true;
       URL.revokeObjectURL(url);
     };
   }, [file]);
@@ -50,13 +72,21 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string | null>(null);
   const [processedBuffer, setProcessedBuffer] = useState<AudioBuffer | null>(null);
   const [viewMode, setViewMode] = useState<'original' | 'processed'>('original');
-  const [exportFormat, setExportFormat] = useState<'wav' | 'mp3'>('mp3');
+  const [exportFormat, setExportFormat] = useState<'wav' | 'mp3'>('wav');
   const [processedDuration, setProcessedDuration] = useState(0);
   const [stats, setStats] = useState<{ detected: number, removed: number } | null>(null);
   const [estimatedStats, setEstimatedStats] = useState<{ detected: number, removed: number } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+
+  const targetBuffer = viewMode === 'processed' ? processedBuffer : highQualityBuffer;
+  const canProcess = isReady && targetBuffer !== null;
+
+  const isLoopingRef = useRef(isLooping);
+  useEffect(() => {
+    isLoopingRef.current = isLooping;
+  }, [isLooping]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -93,7 +123,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     ws.on('play', () => setIsPlaying(true));
     ws.on('pause', () => setIsPlaying(false));
     ws.on('finish', () => {
-      if (isLooping) {
+      if (isLoopingRef.current) {
         ws.play();
       } else {
         setIsPlaying(false);
@@ -103,7 +133,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     return () => {
       ws.destroy();
     };
-  }, [originalUrl, isLooping]);
+  }, [originalUrl]);
 
   useEffect(() => {
     if (wavesurferRef.current && isReady) {
@@ -125,12 +155,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (isReady && wavesurferRef.current) {
+      if (canProcess) {
         analyzeAudio();
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [threshold, silenceDuration, reduction, maximum, isReady]);
+  }, [threshold, silenceDuration, reduction, maximum, canProcess, targetBuffer]);
 
   useEffect(() => {
     if (wavesurferRef.current && isReady) {
@@ -196,14 +226,16 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const detectSilences = () => {
-    const decodedData = wavesurferRef.current?.getDecodedData();
+    const decodedData = targetBuffer;
     if (!decodedData) return null;
 
     const sampleRate = decodedData.sampleRate;
     const length = decodedData.length;
     const thresholdLinear = Math.pow(10, threshold / 20);
     const minSilenceSamples = silenceDuration * sampleRate;
-    const channelData = decodedData.getChannelData(0);
+    
+    // Add a generous padding (e.g., 100ms) to avoid cutting off speech tails or breaths
+    const paddingSamples = Math.floor(sampleRate * 0.1);
     
     let isSilent = false;
     let silenceStart = 0;
@@ -211,12 +243,36 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
     const blockSize = Math.floor(sampleRate * 0.01); 
     
+    // Extract all channels for accurate RMS
+    const channels = [];
+    for (let c = 0; c < decodedData.numberOfChannels; c++) {
+      channels.push(decodedData.getChannelData(c));
+    }
+    
+    // Helper to find zero crossing to avoid clicks when cutting
+    const findZeroCrossing = (index: number, direction: 1 | -1): number => {
+      const maxSearch = Math.floor(sampleRate * 0.02); // 20ms search window
+      let i = index;
+      let count = 0;
+      const channelData = channels[0]; // Use primary channel for zero crossing
+      while (i > 0 && i < length - 1 && count < maxSearch) {
+        if (channelData[i] * channelData[i+1] <= 0) {
+          return i;
+        }
+        i += direction;
+        count++;
+      }
+      return index;
+    };
+    
     for (let i = 0; i < length; i += blockSize) {
       let maxAmplitude = 0;
       const end = Math.min(i + blockSize, length);
       for (let j = i; j < end; j++) {
-        const abs = Math.abs(channelData[j]);
-        if (abs > maxAmplitude) maxAmplitude = abs;
+        for (let c = 0; c < channels.length; c++) {
+          const abs = Math.abs(channels[c][j]);
+          if (abs > maxAmplitude) maxAmplitude = abs;
+        }
       }
 
       const currentBlockSilent = maxAmplitude < thresholdLinear;
@@ -227,11 +283,22 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       } else if (!currentBlockSilent && isSilent) {
         isSilent = false;
         const silenceLen = i - silenceStart;
-        if (silenceLen >= minSilenceSamples) {
+        
+        // Apply padding: don't cut the very beginning and very end of the silence
+        const paddedStart = Math.min(length, silenceStart + paddingSamples);
+        const paddedEnd = Math.max(0, i - paddingSamples);
+        
+        // Snap to zero crossings to prevent clicks without needing crossfades
+        const zcStart = findZeroCrossing(paddedStart, 1);
+        const zcEnd = findZeroCrossing(paddedEnd, -1);
+        
+        const paddedLen = zcEnd - zcStart;
+
+        if (paddedLen >= minSilenceSamples && zcEnd > zcStart) {
           silenceRegions.push({ 
-            start: silenceStart, 
-            end: i,
-            originalLength: silenceLen,
+            start: zcStart, 
+            end: zcEnd,
+            originalLength: paddedLen,
             newLength: 0
           });
         }
@@ -240,11 +307,17 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
     if (isSilent) {
       const silenceLen = length - silenceStart;
-      if (silenceLen >= minSilenceSamples) {
+      const paddedStart = Math.min(length, silenceStart + paddingSamples);
+      const paddedEnd = length; // End of file, no padding at the very end
+      
+      const zcStart = findZeroCrossing(paddedStart, 1);
+      const paddedLen = paddedEnd - zcStart;
+
+      if (paddedLen >= minSilenceSamples && paddedEnd > zcStart) {
         silenceRegions.push({ 
-          start: silenceStart, 
-          end: length,
-          originalLength: silenceLen,
+          start: zcStart, 
+          end: paddedEnd,
+          originalLength: paddedLen,
           newLength: 0
         });
       }
@@ -270,6 +343,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     return {
       regions: silenceRegions,
       detected: silenceRegions.length,
+      removedSamples: totalSilenceRemoved,
       removed: totalSilenceRemoved / sampleRate,
       sampleRate,
       length,
@@ -298,7 +372,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const processAudio = async () => {
-    if (!wavesurferRef.current || !isReady) return;
+    if (!canProcess) return;
     setIsProcessing(true);
     setError(null);
     setStats(null);
@@ -308,13 +382,9 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       const result = detectSilences();
       if (!result) throw new Error("Audio not decoded yet");
 
-      const { regions: silenceRegions, detected: detectedSilenceCount, removed: totalSilenceRemovedSeconds, sampleRate, length, numberOfChannels, decodedData } = result;
+      const { regions: silenceRegions, detected: detectedSilenceCount, removedSamples, removed: totalSilenceRemovedSeconds, sampleRate, length, numberOfChannels, decodedData } = result;
       
-      // Crossfade duration in samples (e.g., 5ms)
-      const crossfadeSamples = fullCrossfade ? Math.floor(sampleRate * 0.005) : 0;
-      
-      const totalSilenceRemoved = totalSilenceRemovedSeconds * sampleRate;
-      const newLength = Math.max(1, length - totalSilenceRemoved);
+      const newLength = Math.max(1, length - removedSamples);
       
       if (newLength === length || detectedSilenceCount === 0) {
         setError("No silence detected with current settings. Try increasing the Threshold or decreasing Duration.");
@@ -341,15 +411,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             
             if (region.newLength > 0) {
               const keepStart = region.start + Math.floor((region.originalLength - region.newLength) / 2);
-              const chunk = oldData.subarray(keepStart, keepStart + region.newLength);
-              
-              // Apply simple fade in/out to the kept silence chunk to avoid clicks
-              if (crossfadeSamples > 0 && region.newLength > crossfadeSamples * 2) {
-                for (let i = 0; i < crossfadeSamples; i++) {
-                  chunk[i] *= (i / crossfadeSamples);
-                  chunk[region.newLength - 1 - i] *= (i / crossfadeSamples);
-                }
-              }
+              const chunk = new Float32Array(oldData.subarray(keepStart, keepStart + region.newLength));
               
               newData.set(chunk, Math.min(newIndex, newLength - chunk.length));
               newIndex += region.newLength;
@@ -364,7 +426,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             }
             
             const copyLength = copyEnd - oldIndex;
-            const chunk = oldData.subarray(oldIndex, copyEnd);
+            // Copy the chunk to avoid modifying the original decoded data
+            const chunk = new Float32Array(oldData.subarray(oldIndex, copyEnd));
             
             newData.set(chunk, Math.min(newIndex, newLength - chunk.length));
             
@@ -404,12 +467,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const normalizeAudio = async () => {
-    if (!wavesurferRef.current || !isReady) return;
+    if (!canProcess) return;
     setIsProcessing(true);
     setError(null);
     setProcessingStatus("Normalizing...");
     try {
-      const decodedData = wavesurferRef.current.getDecodedData();
+      const decodedData = targetBuffer;
       if (!decodedData) throw new Error("Audio not decoded yet");
 
       const sampleRate = decodedData.sampleRate;
@@ -459,12 +522,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const reverseAudio = async () => {
-    if (!wavesurferRef.current || !isReady) return;
+    if (!canProcess) return;
     setIsProcessing(true);
     setError(null);
     setProcessingStatus("Reversing...");
     try {
-      const decodedData = wavesurferRef.current.getDecodedData();
+      const decodedData = targetBuffer;
       if (!decodedData) throw new Error("Audio not decoded yet");
 
       const sampleRate = decodedData.sampleRate;
@@ -559,7 +622,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           <div>
             <h2 className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[200px] sm:max-w-xs">{file.name}</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {(file.size / 1024 / 1024).toFixed(2)} MB • {isReady ? formatTime(duration) : 'Loading...'}
+              {(file.size / 1024 / 1024).toFixed(2)} MB • {canProcess ? formatTime(duration) : 'Loading...'}
             </p>
           </div>
         </div>
@@ -723,7 +786,9 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Quality</p>
-                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">Original (High)</p>
+                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                      {exportFormat === 'wav' ? 'Lossless (Original)' : 'Ultra (320kbps)'}
+                    </p>
                   </div>
                 </div>
                 <a 
@@ -830,7 +895,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
             <button
               onClick={processAudio}
-              disabled={!isReady || isProcessing}
+              disabled={!canProcess || isProcessing}
               className="w-full mt-6 bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 relative overflow-hidden"
             >
               {isProcessing ? (
@@ -862,14 +927,14 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={normalizeAudio}
-                disabled={!isReady || isProcessing}
+                disabled={!canProcess || isProcessing}
                 className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 font-medium py-2 px-3 rounded-lg border border-slate-600 transition-colors text-sm flex items-center justify-center gap-2"
               >
                 Normalize
               </button>
               <button
                 onClick={reverseAudio}
-                disabled={!isReady || isProcessing}
+                disabled={!canProcess || isProcessing}
                 className="bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 font-medium py-2 px-3 rounded-lg border border-slate-600 transition-colors text-sm flex items-center justify-center gap-2"
               >
                 Reverse
@@ -918,9 +983,10 @@ function bufferToWav(buffer: AudioBuffer): Blob {
   while (pos < length) {
     for (let i = 0; i < numOfChan; i++) {
       // interleave channels
-      sample = Math.max(-1, Math.min(1, channels[i][offset])); // clamp
-      sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0; // scale to 16-bit signed int
-      view.setInt16(pos, sample, true); // write 16-bit sample
+      let s = channels[i][offset];
+      // Clamp and scale with rounding for better precision
+      let sampleInt = Math.max(-32768, Math.min(32767, Math.round(s < 0 ? s * 32768 : s * 32767)));
+      view.setInt16(pos, sampleInt, true); // write 16-bit sample
       pos += 2;
     }
     offset++; // next source sample
@@ -963,10 +1029,11 @@ async function bufferToMp3(buffer: AudioBuffer): Promise<Blob> {
   const channels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
   
-  const mp3encoder = new Mp3Encoder(channels, sampleRate, 192); 
+  // High quality 320kbps encoding
+  const mp3encoder = new Mp3Encoder(channels, sampleRate, 320); 
   const mp3Data = [];
 
-  const sampleBlockSize = 1152; // can be anything in multiples of 1152
+  const sampleBlockSize = 1152 * 10; // Process in larger chunks for better psychoacoustic modeling
 
   if (channels === 2) {
     const left = buffer.getChannelData(0);
@@ -976,11 +1043,13 @@ async function bufferToMp3(buffer: AudioBuffer): Promise<Blob> {
     const leftInt = new Int16Array(left.length);
     const rightInt = new Int16Array(right.length);
     for (let i = 0; i < left.length; i++) {
-      // Clamp values to [-1, 1] before scaling
-      const l = Math.max(-1, Math.min(1, left[i]));
-      const r = Math.max(-1, Math.min(1, right[i]));
-      leftInt[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
-      rightInt[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
+      // High-quality float to 16-bit PCM conversion with rounding
+      let l = left[i];
+      let r = right[i];
+      
+      // Clamp and scale with rounding for better precision
+      leftInt[i] = Math.max(-32768, Math.min(32767, Math.round(l < 0 ? l * 32768 : l * 32767)));
+      rightInt[i] = Math.max(-32768, Math.min(32767, Math.round(r < 0 ? r * 32768 : r * 32767)));
     }
 
     for (let i = 0; i < leftInt.length; i += sampleBlockSize) {
@@ -995,8 +1064,8 @@ async function bufferToMp3(buffer: AudioBuffer): Promise<Blob> {
     const mono = buffer.getChannelData(0);
     const monoInt = new Int16Array(mono.length);
     for (let i = 0; i < mono.length; i++) {
-      const m = Math.max(-1, Math.min(1, mono[i]));
-      monoInt[i] = m < 0 ? m * 0x8000 : m * 0x7FFF;
+      let m = mono[i];
+      monoInt[i] = Math.max(-32768, Math.min(32767, Math.round(m < 0 ? m * 32768 : m * 32767)));
     }
 
     for (let i = 0; i < monoInt.length; i += sampleBlockSize) {
