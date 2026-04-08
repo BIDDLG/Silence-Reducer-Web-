@@ -2,7 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { Play, Pause, Download, RotateCcw, Settings2, Scissors, Activity, FileAudio, Info, ZoomIn, ZoomOut, Repeat, FastForward, Volume2, Zap, Plus, Minus } from 'lucide-react';
 import { cn } from '../lib/utils';
-import * as lamejs from 'lamejs';
+
+// Import lamejs as a raw string to inject it as a script
+// This avoids bundling issues with its internal require/MPEGMode
+import lamejsRaw from 'lamejs/lame.all.js?raw';
 
 interface AudioEditorProps {
   file: File;
@@ -52,6 +55,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const [stats, setStats] = useState<{ detected: number, removed: number } | null>(null);
   const [estimatedStats, setEstimatedStats] = useState<{ detected: number, removed: number } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -295,7 +300,9 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const processAudio = async () => {
     if (!wavesurferRef.current || !isReady) return;
     setIsProcessing(true);
+    setError(null);
     setStats(null);
+    setProcessingStatus("Detecting silence...");
     
     try {
       const result = detectSilences();
@@ -310,11 +317,13 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       const newLength = Math.max(1, length - totalSilenceRemoved);
       
       if (newLength === length || detectedSilenceCount === 0) {
-        alert("No silence detected with current settings. Try increasing the Threshold (e.g., to -30dB or -20dB) or decreasing Duration.");
+        setError("No silence detected with current settings. Try increasing the Threshold or decreasing Duration.");
         setIsProcessing(false);
+        setProcessingStatus(null);
         return;
       }
 
+      setProcessingStatus(`Processing ${detectedSilenceCount} regions...`);
       const offlineCtx = new OfflineAudioContext(numberOfChannels, newLength, sampleRate);
       const newBuffer = offlineCtx.createBuffer(numberOfChannels, newLength, sampleRate);
 
@@ -365,6 +374,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         }
       }
 
+      setProcessingStatus(`Encoding to ${exportFormat.toUpperCase()}...`);
       let blob: Blob;
       if (exportFormat === 'mp3') {
         blob = await bufferToMp3(newBuffer);
@@ -382,18 +392,22 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         detected: detectedSilenceCount,
         removed: totalSilenceRemovedSeconds
       });
+      setProcessingStatus(null);
       
     } catch (error) {
       console.error("Error processing audio:", error);
-      alert("An error occurred while processing the audio.");
+      setError(error instanceof Error ? error.message : "An error occurred while processing the audio.");
     } finally {
       setIsProcessing(false);
+      setProcessingStatus(null);
     }
   };
 
   const normalizeAudio = async () => {
     if (!wavesurferRef.current || !isReady) return;
     setIsProcessing(true);
+    setError(null);
+    setProcessingStatus("Normalizing...");
     try {
       const decodedData = wavesurferRef.current.getDecodedData();
       if (!decodedData) throw new Error("Audio not decoded yet");
@@ -413,6 +427,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
       if (maxAmplitude === 0) {
         setIsProcessing(false);
+        setProcessingStatus(null);
         return;
       }
 
@@ -433,17 +448,21 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       const url = URL.createObjectURL(wavBlob);
       setProcessedAudioUrl(url);
       setProcessedDuration(newBuffer.duration);
+      setProcessingStatus(null);
     } catch (error) {
       console.error("Error normalizing audio:", error);
-      alert("An error occurred while normalizing the audio.");
+      setError("An error occurred while normalizing the audio.");
     } finally {
       setIsProcessing(false);
+      setProcessingStatus(null);
     }
   };
 
   const reverseAudio = async () => {
     if (!wavesurferRef.current || !isReady) return;
     setIsProcessing(true);
+    setError(null);
+    setProcessingStatus("Reversing...");
     try {
       const decodedData = wavesurferRef.current.getDecodedData();
       if (!decodedData) throw new Error("Audio not decoded yet");
@@ -467,11 +486,13 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       const url = URL.createObjectURL(wavBlob);
       setProcessedAudioUrl(url);
       setProcessedDuration(newBuffer.duration);
+      setProcessingStatus(null);
     } catch (error) {
       console.error("Error reversing audio:", error);
-      alert("An error occurred while reversing the audio.");
+      setError("An error occurred while reversing the audio.");
     } finally {
       setIsProcessing(false);
+      setProcessingStatus(null);
     }
   };
 
@@ -810,12 +831,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             <button
               onClick={processAudio}
               disabled={!isReady || isProcessing}
-              className="w-full mt-6 bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
+              className="w-full mt-6 bg-indigo-500 hover:bg-indigo-600 disabled:bg-slate-600 disabled:text-slate-400 text-white font-semibold py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2 relative overflow-hidden"
             >
               {isProcessing ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Processing...
+                  <span>{processingStatus || "Processing..."}</span>
                 </>
               ) : (
                 <>
@@ -824,6 +845,13 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                 </>
               )}
             </button>
+
+            {error && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-2 text-red-400 text-sm">
+                <Info className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>{error}</p>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-700">
@@ -913,20 +941,29 @@ function bufferToWav(buffer: AudioBuffer): Blob {
 
 // Helper function to convert AudioBuffer to MP3 Blob
 async function bufferToMp3(buffer: AudioBuffer): Promise<Blob> {
-  // lamejs is now imported at the top level as * as lamejs
-  // Some versions of lamejs export as default, some as the module itself
-  const lame: any = (lamejs as any).default || lamejs;
-  
-  // Ensure we have the right object and constructor
-  const Mp3Encoder = lame.Mp3Encoder || (lamejs as any).Mp3Encoder;
+  // Ensure lamejs is loaded in the global scope
+  if (!(window as any).lamejs) {
+    try {
+      const script = document.createElement('script');
+      script.text = lamejsRaw;
+      document.head.appendChild(script);
+      console.log("LameJS injected successfully.");
+    } catch (e) {
+      console.error("Failed to inject LameJS:", e);
+    }
+  }
+
+  const Mp3Encoder = (window as any).lamejs?.Mp3Encoder;
   
   if (!Mp3Encoder) {
-    throw new Error("LameJS Mp3Encoder not found. Please check if the library is correctly installed.");
+    console.error("LameJS Mp3Encoder not found in global scope after injection.");
+    throw new Error("MP3 Encoder (LameJS) failed to load. Please try WAV format or refresh the page.");
   }
   
   const channels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
-  const mp3encoder = new Mp3Encoder(channels, sampleRate, 192); // 192kbps for high quality
+  
+  const mp3encoder = new Mp3Encoder(channels, sampleRate, 192); 
   const mp3Data = [];
 
   const sampleBlockSize = 1152; // can be anything in multiples of 1152
@@ -939,8 +976,11 @@ async function bufferToMp3(buffer: AudioBuffer): Promise<Blob> {
     const leftInt = new Int16Array(left.length);
     const rightInt = new Int16Array(right.length);
     for (let i = 0; i < left.length; i++) {
-      leftInt[i] = left[i] < 0 ? left[i] * 0x8000 : left[i] * 0x7FFF;
-      rightInt[i] = right[i] < 0 ? right[i] * 0x8000 : right[i] * 0x7FFF;
+      // Clamp values to [-1, 1] before scaling
+      const l = Math.max(-1, Math.min(1, left[i]));
+      const r = Math.max(-1, Math.min(1, right[i]));
+      leftInt[i] = l < 0 ? l * 0x8000 : l * 0x7FFF;
+      rightInt[i] = r < 0 ? r * 0x8000 : r * 0x7FFF;
     }
 
     for (let i = 0; i < leftInt.length; i += sampleBlockSize) {
@@ -955,7 +995,8 @@ async function bufferToMp3(buffer: AudioBuffer): Promise<Blob> {
     const mono = buffer.getChannelData(0);
     const monoInt = new Int16Array(mono.length);
     for (let i = 0; i < mono.length; i++) {
-      monoInt[i] = mono[i] < 0 ? mono[i] * 0x8000 : mono[i] * 0x7FFF;
+      const m = Math.max(-1, Math.min(1, mono[i]));
+      monoInt[i] = m < 0 ? m * 0x8000 : m * 0x7FFF;
     }
 
     for (let i = 0; i < monoInt.length; i += sampleBlockSize) {
