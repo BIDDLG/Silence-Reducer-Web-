@@ -160,7 +160,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       }
     }, 500);
     return () => clearTimeout(timer);
-  }, [threshold, silenceDuration, reduction, maximum, canProcess, targetBuffer]);
+  }, [threshold, silenceDuration, reduction, maximum, canProcess, highQualityBuffer]);
 
   useEffect(() => {
     if (wavesurferRef.current && isReady) {
@@ -219,6 +219,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return "0:00.00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     const ms = Math.floor((seconds % 1) * 100);
@@ -226,7 +227,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const detectSilences = () => {
-    const decodedData = targetBuffer;
+    const decodedData = highQualityBuffer;
     if (!decodedData) return null;
 
     const sampleRate = decodedData.sampleRate;
@@ -382,6 +383,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     setIsProcessing(true);
     setError(null);
     setStats(null);
+    setProcessedAudioUrl(null);
     setProcessingStatus("Detecting silence...");
     
     try {
@@ -628,7 +630,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           <div>
             <h2 className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[200px] sm:max-w-xs">{file.name}</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {(file.size / 1024 / 1024).toFixed(2)} MB • {canProcess ? formatTime(duration) : 'Loading...'}
+              {(file.size / 1024 / 1024).toFixed(2)} MB • {canProcess ? formatTime(highQualityBuffer?.duration || 0) : 'Loading...'}
             </p>
           </div>
         </div>
@@ -680,7 +682,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                 )}
               </div>
               <div className="text-sm font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md">
-                {formatTime(currentTime)} / {formatTime(viewMode === 'original' ? duration : processedDuration)}
+                {formatTime(currentTime)} / {formatTime(viewMode === 'original' ? (highQualityBuffer?.duration || 0) : processedDuration)}
               </div>
             </div>
             
@@ -764,7 +766,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                     </span>
                   )}
                   <span className="text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
-                    Saved {formatTime(duration - processedDuration)}
+                    Saved {formatTime(Math.max(0, (highQualityBuffer?.duration || 0) - processedDuration))}
                   </span>
                 </div>
               </div>
