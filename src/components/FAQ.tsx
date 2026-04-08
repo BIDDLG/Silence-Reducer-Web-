@@ -12,7 +12,7 @@ export function FAQ() {
     },
     {
       q: "What audio formats are supported?",
-      a: "We support most common audio formats including MP3, WAV, M4A, AAC, OGG, and FLAC. The exported file will be in high-quality WAV format."
+      a: "We support most common audio formats including MP3, WAV, M4A, AAC, OGG, and FLAC. You can export your processed audio as a high-quality MP3 or WAV file."
     },
     {
       q: "Is there a file size limit?",
@@ -25,17 +25,17 @@ export function FAQ() {
   ];
 
   return (
-    <section id="faq" className="py-24 bg-slate-50">
+    <section id="faq" className="py-24 bg-slate-50 dark:bg-slate-900 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-slate-900 mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
         </div>
-
+ 
         <div className="space-y-6">
           {faqs.map((faq, index) => (
-            <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">{faq.q}</h3>
-              <p className="text-slate-600">{faq.a}</p>
+            <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">{faq.q}</h3>
+              <p className="text-slate-600 dark:text-slate-400">{faq.a}</p>
             </div>
           ))}
         </div>

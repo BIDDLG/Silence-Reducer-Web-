@@ -24,21 +24,21 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
   } as any);
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-2">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-2 transition-colors">
       <div
         {...getRootProps()}
         className={cn(
           "border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-200 ease-in-out flex flex-col items-center justify-center min-h-[300px]",
-          isDragActive ? "border-indigo-500 bg-indigo-50/50" : "border-slate-200 hover:border-indigo-400 hover:bg-slate-50",
-          isDragReject && "border-red-500 bg-red-50"
+          isDragActive ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20" : "border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/50",
+          isDragReject && "border-red-500 bg-red-50 dark:bg-red-900/20"
         )}
       >
         <input {...getInputProps()} />
         
         <div className={cn(
           "w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-colors duration-200",
-          isDragActive ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-500",
-          isDragReject && "bg-red-100 text-red-600"
+          isDragActive ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
+          isDragReject && "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
         )}>
           {isDragReject ? (
             <AlertCircle className="w-10 h-10" />
@@ -49,10 +49,10 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
           )}
         </div>
 
-        <h3 className="text-2xl font-bold text-slate-800 mb-2">
+        <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
           {isDragActive ? "Drop your audio file here" : "Upload Audio"}
         </h3>
-        <p className="text-slate-500 mb-6 max-w-md mx-auto">
+        <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
           Drag and drop your audio file here, or click to browse.
         </p>
 
@@ -60,11 +60,11 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
           Select File
         </button>
 
-        <div className="mt-8 flex items-center justify-center gap-4 text-xs text-slate-400 font-medium">
+        <div className="mt-8 flex items-center justify-center gap-4 text-xs text-slate-400 dark:text-slate-500 font-medium">
           <span className="flex items-center gap-1"><FileAudio className="w-3 h-3" /> MP3, WAV, M4A, FLAC</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+          <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
           <span>Up to 500MB</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+          <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
           <span>100% Private</span>
         </div>
       </div>
