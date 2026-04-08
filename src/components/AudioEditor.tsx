@@ -465,6 +465,14 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       });
       setProcessingStatus(null);
       
+      // Scroll to download section
+      setTimeout(() => {
+        const downloadSection = document.getElementById('processed-audio-section');
+        if (downloadSection) {
+          downloadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
     } catch (error) {
       console.error("Error processing audio:", error);
       setError(error instanceof Error ? error.message : "An error occurred while processing the audio.");
@@ -761,7 +769,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
           {/* Results Card */}
           {processedAudioUrl && (
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/10 transition-colors">
+            <div id="processed-audio-section" className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/10 transition-colors">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
                   <Scissors className="w-5 h-5" />
