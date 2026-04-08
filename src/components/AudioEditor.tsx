@@ -80,6 +80,19 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
 
+  const [isPresetOpen, setIsPresetOpen] = useState(false);
+  const presetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (presetRef.current && !presetRef.current.contains(event.target as Node)) {
+        setIsPresetOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const targetBuffer = viewMode === 'processed' ? processedBuffer : highQualityBuffer;
   const canProcess = isReady && targetBuffer !== null;
 
@@ -845,21 +858,42 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           <div className="space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-6 bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-700/50">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 w-full sm:w-24 shrink-0">Presets:</label>
-              <div className="flex-1 min-w-0 w-full relative overflow-hidden rounded-lg">
-                <select 
-                  value={preset}
-                  onChange={(e) => handlePresetChange(e.target.value)}
-                  className="w-full max-w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg pl-3 pr-8 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 truncate appearance-none cursor-pointer shadow-sm"
+              <div className="flex-1 min-w-0 w-full relative" ref={presetRef}>
+                <button
+                  onClick={() => setIsPresetOpen(!isPresetOpen)}
+                  className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg pl-3 pr-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-sm transition-colors"
                 >
-                  <option value="Default">Default</option>
-                  <option value="Eliminate all silences">Eliminate all silences</option>
-                  <option value="Reduce silences 50%">Reduce silences 50%</option>
-                  <option value="Reduce silences to half a second">Reduce silences to half a second</option>
-                  <option value="Shorten silences longer than 5 seconds">Shorten silences longer than 5 seconds</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-r-lg border-y border-r border-transparent">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                </div>
+                  <span className="truncate">{preset}</span>
+                  <svg className={cn("w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-2", isPresetOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                
+                {isPresetOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+                    {[
+                      "Default",
+                      "Eliminate all silences",
+                      "Reduce silences 50%",
+                      "Reduce silences to half a second",
+                      "Shorten silences longer than 5 seconds"
+                    ].map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => {
+                          handlePresetChange(p);
+                          setIsPresetOpen(false);
+                        }}
+                        className={cn(
+                          "w-full text-left px-4 py-2.5 text-sm transition-colors",
+                          preset === p 
+                            ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium" 
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                        )}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
