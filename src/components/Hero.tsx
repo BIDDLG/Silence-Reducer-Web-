@@ -8,7 +8,7 @@ export function Hero() {
       </div>
       <div className="max-w-4xl mx-auto relative z-10">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
-          Remove silence from audio in <span className="text-indigo-400">one click</span>
+          Remove Silence from Audio & Video in <span className="text-indigo-400">One Click</span>
         </h1>
         <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
           Automatically detect and remove silent pauses from your podcasts, lectures, voice notes, and interviews. 100% free, secure, and processed entirely in your browser.
