@@ -29,7 +29,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-200 ease-in-out flex flex-col items-center justify-center min-h-[300px]",
+          "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ease-in-out flex flex-col items-center justify-center min-h-[250px]",
           isDragActive ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20" : "border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/50",
           isDragReject && "border-red-500 bg-red-50 dark:bg-red-900/20"
         )}
@@ -37,7 +37,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         <input {...getInputProps()} />
         
         <div className={cn(
-          "w-20 h-20 rounded-full flex items-center justify-center mb-6 transition-colors duration-200",
+          "w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors duration-200",
           isDragActive ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
           isDragReject && "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
         )}>
@@ -53,7 +53,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
           {isDragActive ? "Drop your file here" : "Upload Audio or Video"}
         </h3>
-        <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
+        <p className="text-slate-500 dark:text-slate-400 mb-4 max-w-md mx-auto">
           Drag and drop your audio or video file here, or click to browse. Video files will have their audio automatically extracted.
         </p>
 

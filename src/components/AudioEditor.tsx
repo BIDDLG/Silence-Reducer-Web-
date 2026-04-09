@@ -698,7 +698,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     onChange: (v: number) => void,
     format?: (v: number) => string
   }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
       <div className="flex justify-between items-center sm:w-32 shrink-0">
         <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
         <input 
@@ -768,7 +768,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         {/* Main Editor Area */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
           {/* Waveform Card */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex flex-wrap items-center gap-4">
                 <h3 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -874,7 +874,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
           {/* Results Card */}
           {processedAudioUrl && (
-            <div id="processed-audio-section" className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/10 transition-colors">
+            <div id="processed-audio-section" className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/10 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h3 className="font-semibold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
                   <Scissors className="w-5 h-5" />
@@ -972,7 +972,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         </div>
 
         {/* Settings Panel */}
-        <div className="lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 sm:p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 h-fit transition-colors">
+        <div className="lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 h-fit transition-colors">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
             <h3 className="font-semibold flex items-center gap-2 text-lg">
               <div className="p-1.5 bg-indigo-100 dark:bg-indigo-500/20 rounded-lg">

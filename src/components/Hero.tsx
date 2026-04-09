@@ -2,7 +2,7 @@ import React from 'react';
 
 export function Hero() {
   return (
-    <section className="bg-slate-900 text-white pt-24 pb-32 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
+    <section className="bg-slate-900 text-white pt-12 pb-20 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-[radial-gradient(ellipse_at_center,rgba(79,70,229,0.15)_0%,rgba(0,0,0,0)_50%)]"></div>
       </div>

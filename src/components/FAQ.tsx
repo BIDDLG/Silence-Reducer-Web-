@@ -25,9 +25,9 @@ export function FAQ() {
   ];
 
   return (
-    <section id="faq" className="py-24 bg-slate-50 dark:bg-slate-900 transition-colors">
+    <section id="faq" className="py-12 bg-slate-50 dark:bg-slate-900 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
         </div>
  

@@ -127,7 +127,7 @@ export default function App() {
             !audioFile ? (
               <>
                 <Hero />
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10 mb-24">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10 mb-12">
                   <UploadBox onUpload={handleUpload} />
                 </div>
                 <div id="features"><Features /></div>

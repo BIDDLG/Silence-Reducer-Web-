@@ -20,9 +20,9 @@ export function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-slate-900 text-white">
+    <section id="how-it-works" className="py-12 bg-slate-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-8">
           <h2 className="text-3xl font-bold mb-4">How it works</h2>
           <p className="text-lg text-slate-400">
             Three simple steps to professional-sounding audio.
