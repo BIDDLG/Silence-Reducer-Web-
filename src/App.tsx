@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { get, set, del } from 'idb-keyval';
 import { UploadBox } from './components/UploadBox';
 import { AudioEditor } from './components/AudioEditor';
 import { Hero } from './components/Hero';
@@ -30,6 +31,7 @@ function ScrollToTop() {
 
 export default function App() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [isLoadingFile, setIsLoadingFile] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' || 
@@ -37,6 +39,37 @@ export default function App() {
     }
     return false;
   });
+
+  useEffect(() => {
+    // Load saved file on mount
+    get('savedAudioFile').then((file) => {
+      if (file instanceof File) {
+        setAudioFile(file);
+      }
+      setIsLoadingFile(false);
+    }).catch((err) => {
+      console.error('Error loading saved file:', err);
+      setIsLoadingFile(false);
+    });
+  }, []);
+
+  const handleUpload = async (file: File) => {
+    setAudioFile(file);
+    try {
+      await set('savedAudioFile', file);
+    } catch (err) {
+      console.error('Error saving file to IndexedDB:', err);
+    }
+  };
+
+  const handleReset = async () => {
+    setAudioFile(null);
+    try {
+      await del('savedAudioFile');
+    } catch (err) {
+      console.error('Error deleting file from IndexedDB:', err);
+    }
+  };
 
   useEffect(() => {
     if (isDarkMode) {
@@ -48,12 +81,20 @@ export default function App() {
     }
   }, [isDarkMode]);
 
+  if (isLoadingFile) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-indigo-100 dark:selection:bg-indigo-900 selection:text-indigo-900 dark:selection:text-indigo-100 transition-colors duration-300 overflow-x-hidden">
       <ScrollToTop />
       <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2" onClick={() => setAudioFile(null)}>
+          <Link to="/" className="flex items-center gap-2" onClick={handleReset}>
             <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
@@ -87,7 +128,7 @@ export default function App() {
               <>
                 <Hero />
                 <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10 mb-24">
-                  <UploadBox onUpload={setAudioFile} />
+                  <UploadBox onUpload={handleUpload} />
                 </div>
                 <div id="features"><Features /></div>
                 <div id="how-it-works"><HowItWorks /></div>
@@ -95,7 +136,7 @@ export default function App() {
               </>
             ) : (
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <AudioEditor file={audioFile} onReset={() => setAudioFile(null)} />
+                <AudioEditor file={audioFile} onReset={handleReset} />
               </div>
             )
           } />

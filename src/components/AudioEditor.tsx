@@ -665,10 +665,10 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         </div>
         <button 
           onClick={onReset}
-          className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 transition-colors"
+          className="text-sm font-medium text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 transition-colors px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
         >
           <RotateCcw className="w-4 h-4" />
-          Upload Different File
+          Clear Project
         </button>
       </div>
 
@@ -677,8 +677,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         <div className="lg:col-span-7 xl:col-span-8 space-y-6">
           {/* Waveform Card */}
           <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div className="flex flex-wrap items-center gap-4">
                 <h3 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <Activity className="w-5 h-5 text-indigo-500" />
                   {viewMode === 'original' ? 'Original Audio' : 'Processed Audio'}
@@ -710,7 +710,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                   </div>
                 )}
               </div>
-              <div className="text-sm font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md">
+              <div className="text-sm font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md shrink-0">
                 {formatTime(currentTime)} / {formatTime(viewMode === 'original' ? (highQualityBuffer?.duration || 0) : processedDuration)}
               </div>
             </div>
@@ -783,12 +783,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           {/* Results Card */}
           {processedAudioUrl && (
             <div id="processed-audio-section" className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/10 transition-colors">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h3 className="font-semibold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
                   <Scissors className="w-5 h-5" />
                   Processed Result
                 </h3>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {stats && (
                     <span className="hidden sm:inline-block text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                       {stats.detected} silences found
@@ -797,6 +797,16 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                   <span className="text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                     Saved {formatTime(Math.max(0, (highQualityBuffer?.duration || 0) - processedDuration))}
                   </span>
+                  <button 
+                    onClick={() => {
+                      setProcessedAudioUrl(null);
+                      setProcessedBuffer(null);
+                      setViewMode('original');
+                    }}
+                    className="text-sm font-medium text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    Undo Changes
+                  </button>
                 </div>
               </div>
               
