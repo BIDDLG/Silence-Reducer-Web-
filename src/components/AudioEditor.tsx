@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
-import { Play, Pause, Download, RotateCcw, Settings2, Scissors, Activity, FileAudio, Info, ZoomIn, ZoomOut, Repeat, FastForward, Volume2, Zap, Plus, Minus } from 'lucide-react';
+import { Play, Pause, Download, RotateCcw, Settings2, Scissors, Activity, FileAudio, Info, ZoomIn, ZoomOut, Repeat, FastForward, Volume2, Zap, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile } from '@ffmpeg/util';
 
 // Import lamejs as a raw string to inject it as a script
 // This avoids bundling issues with its internal require/MPEGMode
@@ -24,6 +26,24 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const currentUrlRef = useRef<string | null>(null);
   const [highQualityBuffer, setHighQualityBuffer] = useState<AudioBuffer | null>(null);
+
+  // FFmpeg state
+  const ffmpegRef = useRef(new FFmpeg());
+  const [isFfmpegLoaded, setIsFfmpegLoaded] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+
+  useEffect(() => {
+    const loadFfmpeg = async () => {
+      const ffmpeg = ffmpegRef.current;
+      ffmpeg.on('progress', ({ progress }) => {
+        setExportProgress(Math.round(progress * 100));
+      });
+      await ffmpeg.load();
+      setIsFfmpegLoaded(true);
+    };
+    loadFfmpeg().catch(console.error);
+  }, []);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
@@ -83,10 +103,16 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const [isPresetOpen, setIsPresetOpen] = useState(false);
   const presetRef = useRef<HTMLDivElement>(null);
 
+  const [isExportFormatOpen, setIsExportFormatOpen] = useState(false);
+  const exportFormatRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (presetRef.current && !presetRef.current.contains(event.target as Node)) {
         setIsPresetOpen(false);
+      }
+      if (exportFormatRef.current && !exportFormatRef.current.contains(event.target as Node)) {
+        setIsExportFormatOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -588,6 +614,72 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     }
   };
 
+  const handleExport = async () => {
+    if (!processedAudioUrl) return;
+
+    if (exportFormat === 'wav') {
+      const a = document.createElement('a');
+      a.href = processedAudioUrl;
+      a.download = `processed_${file.name.split('.')[0]}.wav`;
+      a.click();
+      return;
+    }
+
+    if (!isFfmpegLoaded) {
+      alert("Encoder is still loading, please wait a moment...");
+      return;
+    }
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    try {
+      const ffmpeg = ffmpegRef.current;
+      const response = await fetch(processedAudioUrl);
+      const blob = await response.blob();
+      const inputName = 'input.wav';
+      const outputName = `output.${exportFormat}`;
+
+      await ffmpeg.writeFile(inputName, await fetchFile(blob));
+
+      let args = ['-i', inputName];
+      
+      if (exportFormat === 'mp3') {
+        args.push('-b:a', '320k');
+      } else if (exportFormat === 'aac' || exportFormat === 'm4a') {
+        args.push('-c:a', 'aac', '-b:a', '256k');
+      } else if (exportFormat === 'ogg') {
+        args.push('-c:a', 'libvorbis', '-q:a', '8');
+      } else if (exportFormat === 'flac') {
+        args.push('-c:a', 'flac');
+      }
+      
+      args.push(outputName);
+
+      await ffmpeg.exec(args);
+
+      const data = await ffmpeg.readFile(outputName);
+      const outBlob = new Blob([(data as Uint8Array).buffer], { type: `audio/${exportFormat}` });
+      const outUrl = URL.createObjectURL(outBlob);
+
+      const a = document.createElement('a');
+      a.href = outUrl;
+      a.download = `processed_${file.name.split('.')[0]}.${exportFormat}`;
+      a.click();
+
+      URL.revokeObjectURL(outUrl);
+      await ffmpeg.deleteFile(inputName);
+      await ffmpeg.deleteFile(outputName);
+
+    } catch (err) {
+      console.error("Export error:", err);
+      alert("An error occurred during export.");
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+    }
+  };
+
   // Helper for rendering control rows
   const ControlRow = ({ 
     label, 
@@ -812,40 +904,68 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 w-full flex items-center gap-4 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <div className="flex-1">
+                  <div className="flex-1 relative" ref={exportFormatRef}>
                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Export Format</p>
-                    <div className="flex gap-2">
-                      {['mp3', 'wav'].map((fmt) => (
-                        <button
-                          key={fmt}
-                          onClick={() => setExportFormat(fmt as any)}
-                          className={cn(
-                            "px-3 py-1 text-xs font-bold rounded-md uppercase transition-all",
-                            exportFormat === fmt 
-                              ? "bg-indigo-600 text-white" 
-                              : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-700"
-                          )}
-                        >
-                          {fmt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Quality</p>
-                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                      {exportFormat === 'wav' ? 'Lossless (Original)' : 'Ultra (320kbps)'}
-                    </p>
+                    <button
+                      onClick={() => setIsExportFormatOpen(!isExportFormatOpen)}
+                      className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-sm transition-colors"
+                    >
+                      <span>{exportFormat}</span>
+                      <svg className={cn("w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-2", isExportFormatOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    
+                    {isExportFormatOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1 bottom-full mb-1 sm:bottom-auto sm:mb-0 sm:top-full">
+                        {[
+                          { id: 'wav', name: 'WAV', quality: 'Lossless (Original)' },
+                          { id: 'mp3', name: 'MP3', quality: 'High (320kbps)' },
+                          { id: 'aac', name: 'AAC', quality: 'High (256kbps)' },
+                          { id: 'ogg', name: 'OGG', quality: 'High (320kbps)' },
+                          { id: 'flac', name: 'FLAC', quality: 'Lossless (Compressed)' },
+                          { id: 'm4a', name: 'M4A', quality: 'High (256kbps)' },
+                        ].map((fmt) => (
+                          <button
+                            key={fmt.id}
+                            onClick={() => {
+                              setExportFormat(fmt.id as any);
+                              setIsExportFormatOpen(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between px-3 py-2 text-sm transition-colors",
+                              exportFormat === fmt.id 
+                                ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold" 
+                                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium"
+                            )}
+                          >
+                            <span className="uppercase">{fmt.id}</span>
+                            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{fmt.quality}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-                <a 
-                  href={processedAudioUrl} 
-                  download={`processed_${file.name.split('.')[0]}.${exportFormat}`}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 whitespace-nowrap"
+                <button 
+                  onClick={handleExport}
+                  disabled={isExporting}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600/50 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-95 whitespace-nowrap relative overflow-hidden"
                 >
-                  <Download className="w-5 h-5" />
-                  Download {exportFormat.toUpperCase()}
-                </a>
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin relative z-10" />
+                      <span className="relative z-10">Exporting {exportProgress}%</span>
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 bg-emerald-800/30 transition-all duration-300 ease-out"
+                        style={{ width: `${exportProgress}%` }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5" />
+                      Download {exportFormat.toUpperCase()}
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}

@@ -17,7 +17,8 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
     onDrop,
     accept: {
-      'audio/*': ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.webm', '.flac']
+      'audio/*': ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.webm', '.flac'],
+      'video/*': ['.mp4', '.mkv', '.avi', '.mov', '.webm']
     },
     maxFiles: 1,
     maxSize: 500 * 1024 * 1024, // 500MB
@@ -50,10 +51,10 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         </div>
 
         <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
-          {isDragActive ? "Drop your audio file here" : "Upload Audio"}
+          {isDragActive ? "Drop your file here" : "Upload Audio or Video"}
         </h3>
         <p className="text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
-          Drag and drop your audio file here, or click to browse.
+          Drag and drop your audio or video file here, or click to browse. Video files will have their audio automatically extracted.
         </p>
 
         <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-sm transition-colors duration-200">
@@ -61,7 +62,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         </button>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs text-slate-400 dark:text-slate-500 font-medium">
-          <span className="flex items-center gap-1"><FileAudio className="w-3 h-3" /> MP3, WAV, M4A, FLAC</span>
+          <span className="flex items-center gap-1"><FileAudio className="w-3 h-3" /> MP3, WAV, MP4, WEBM, etc.</span>
           <span className="hidden sm:block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
           <span>Up to 500MB</span>
           <span className="hidden sm:block w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
