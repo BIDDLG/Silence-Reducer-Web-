@@ -52,7 +52,43 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     let isCancelled = false;
     const decodeFile = async () => {
       try {
-        const arrayBuffer = await file.arrayBuffer();
+        let arrayBuffer: ArrayBuffer;
+
+        if (file.type.startsWith('video/')) {
+          setProcessingStatus("Extracting audio from video...");
+          setIsProcessing(true);
+          
+          // Wait for ffmpeg to load
+          let attempts = 0;
+          while (!ffmpegRef.current.loaded && attempts < 100) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+          }
+
+          if (!ffmpegRef.current.loaded) {
+            throw new Error("FFmpeg failed to load for video extraction");
+          }
+
+          const ffmpeg = ffmpegRef.current;
+          const ext = file.name.split('.').pop() || 'mp4';
+          const inputName = `input_video.${ext}`;
+          const outputName = 'output_audio.wav';
+
+          await ffmpeg.writeFile(inputName, await fetchFile(file));
+          await ffmpeg.exec(['-i', inputName, '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', outputName]);
+
+          const data = await ffmpeg.readFile(outputName);
+          arrayBuffer = (data as Uint8Array).buffer;
+
+          await ffmpeg.deleteFile(inputName);
+          await ffmpeg.deleteFile(outputName);
+          
+          setIsProcessing(false);
+          setProcessingStatus(null);
+        } else {
+          arrayBuffer = await file.arrayBuffer();
+        }
+
         // Force 44.1kHz to prevent Bluetooth/OS downsampling
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 44100 });
         const buffer = await ctx.decodeAudioData(arrayBuffer);
@@ -90,6 +126,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedAudioUrl, setProcessedAudioUrl] = useState<string | null>(null);
+  const processedBlobRef = useRef<Blob | null>(null);
   const [processedBuffer, setProcessedBuffer] = useState<AudioBuffer | null>(null);
   const [viewMode, setViewMode] = useState<'original' | 'processed'>('original');
   const [exportFormat, setExportFormat] = useState<'wav' | 'mp3'>('wav');
@@ -493,7 +530,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       }
       
       const url = URL.createObjectURL(blob);
-      
+      processedBlobRef.current = blob;
       setProcessedAudioUrl(url);
       setProcessedBuffer(newBuffer);
       setProcessedDuration(newBuffer.duration);
@@ -563,6 +600,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       }
 
       const wavBlob = bufferToWav(newBuffer);
+      processedBlobRef.current = wavBlob;
       const url = URL.createObjectURL(wavBlob);
       setProcessedAudioUrl(url);
       setProcessedDuration(newBuffer.duration);
@@ -601,6 +639,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       }
 
       const wavBlob = bufferToWav(newBuffer);
+      processedBlobRef.current = wavBlob;
       const url = URL.createObjectURL(wavBlob);
       setProcessedAudioUrl(url);
       setProcessedDuration(newBuffer.duration);
@@ -615,7 +654,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   };
 
   const handleExport = async () => {
-    if (!processedAudioUrl) return;
+    if (!processedAudioUrl || !processedBlobRef.current) return;
 
     if (exportFormat === 'wav') {
       const a = document.createElement('a');
@@ -635,8 +674,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
     try {
       const ffmpeg = ffmpegRef.current;
-      const response = await fetch(processedAudioUrl);
-      const blob = await response.blob();
+      const blob = processedBlobRef.current;
       const inputName = 'input.wav';
       const outputName = `output.${exportFormat}`;
 

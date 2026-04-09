@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://silencio.pages.dev/sitemap.xml
+Sitemap: https://silencereducer.com/sitemap.xml
