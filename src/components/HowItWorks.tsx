@@ -4,8 +4,8 @@ export function HowItWorks() {
   const steps = [
     {
       number: "01",
-      title: "Upload Audio",
-      description: "Drag and drop your audio file. We support MP3, WAV, M4A, and more."
+      title: "Upload Audio & Video",
+      description: "Drag and drop your Audio or Video file. We support MP3, WAV, M4A, MP4, MKV and more."
     },
     {
       number: "02",
