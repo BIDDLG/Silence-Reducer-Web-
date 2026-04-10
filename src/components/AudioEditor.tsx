@@ -743,7 +743,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           type="number" 
           value={format(value)}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="sm:hidden w-16 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-right text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono"
+          className="sm:hidden w-16 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-right text-slate-900 dark:text-white focus:outline-none focus:border-green-500 font-mono"
         />
       </div>
       <div className="flex items-center gap-3 flex-1 w-full">
@@ -760,7 +760,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           step={step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 accent-indigo-500 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+          className="flex-1 accent-green-500 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
         />
         <button 
           onClick={() => onChange(Math.min(max, value + step))}
@@ -773,7 +773,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         type="number" 
         value={format(value)}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="hidden sm:block w-20 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm text-right text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 font-mono shadow-inner"
+        className="hidden sm:block w-20 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm text-right text-slate-900 dark:text-white focus:outline-none focus:border-green-500 font-mono shadow-inner"
       />
     </div>
   );
@@ -783,7 +783,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg flex items-center justify-center">
             <FileAudio className="w-5 h-5" />
           </div>
           <div>
@@ -810,7 +810,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex flex-wrap items-center gap-4">
                 <h3 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-indigo-500" />
+                  <Activity className="w-5 h-5 text-green-500" />
                   {viewMode === 'original' ? 'Original Audio' : 'Processed Audio'}
                 </h3>
                 {processedAudioUrl && (
@@ -820,7 +820,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                       className={cn(
                         "px-3 py-1 text-xs font-medium rounded-md transition-all",
                         viewMode === 'original' 
-                          ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" 
+                          ? "bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm" 
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                       )}
                     >
@@ -831,7 +831,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                       className={cn(
                         "px-3 py-1 text-xs font-medium rounded-md transition-all",
                         viewMode === 'processed' 
-                          ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm" 
+                          ? "bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm" 
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                       )}
                     >
@@ -854,7 +854,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                   title="Zoom Out"
                 >
                   <ZoomOut className="w-5 h-5" />
@@ -862,7 +862,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                 <span className="text-xs font-mono text-slate-400 w-8 text-center">{zoom}x</span>
                 <button
                   onClick={() => setZoom(Math.min(5, zoom + 0.5))}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
                   title="Zoom In"
                 >
                   <ZoomIn className="w-5 h-5" />
@@ -872,7 +872,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setIsLooping(!isLooping)}
-                  className={cn("p-2 rounded-lg transition-colors", isLooping ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20" : "text-slate-500 hover:text-indigo-600 hover:bg-indigo-50")}
+                  className={cn("p-2 rounded-lg transition-colors", isLooping ? "text-green-600 bg-green-50 dark:bg-green-900/20" : "text-slate-500 hover:text-green-600 hover:bg-green-50")}
                   title="Loop Playback"
                 >
                   <Repeat className="w-5 h-5" />
@@ -880,13 +880,13 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                 <button
                   onClick={togglePlayPause}
                   disabled={!isReady}
-                  className="w-14 h-14 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-14 h-14 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
                 </button>
                 <button
                   onClick={() => setPlaybackRate(playbackRate === 1 ? 1.5 : playbackRate === 1.5 ? 2 : 1)}
-                  className={cn("p-2 rounded-lg transition-colors flex items-center gap-1", playbackRate !== 1 ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20" : "text-slate-500 hover:text-indigo-600 hover:bg-indigo-50")}
+                  className={cn("p-2 rounded-lg transition-colors flex items-center gap-1", playbackRate !== 1 ? "text-green-600 bg-green-50 dark:bg-green-900/20" : "text-slate-500 hover:text-green-600 hover:bg-green-50")}
                   title="Playback Speed"
                 >
                   <FastForward className="w-5 h-5" />
@@ -903,7 +903,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                   step="0.05" 
                   value={volume}
                   onChange={(e) => setVolume(Number(e.target.value))}
-                  className="w-24 accent-indigo-600"
+                  className="w-24 accent-green-600"
                   title="Volume"
                 />
               </div>
@@ -946,7 +946,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                     <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Export Format</p>
                     <button
                       onClick={() => setIsExportFormatOpen(!isExportFormatOpen)}
-                      className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-sm transition-colors"
+                      className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 shadow-sm transition-colors"
                     >
                       <span>{exportFormat}</span>
                       <svg className={cn("w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-2", isExportFormatOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -971,7 +971,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                             className={cn(
                               "w-full flex items-center justify-between px-3 py-2 text-sm transition-colors",
                               exportFormat === fmt.id 
-                                ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold" 
+                                ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 font-bold" 
                                 : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium"
                             )}
                           >
@@ -1013,8 +1013,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         <div className="lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 h-fit transition-colors">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
             <h3 className="font-semibold flex items-center gap-2 text-lg">
-              <div className="p-1.5 bg-indigo-100 dark:bg-indigo-500/20 rounded-lg">
-                <Scissors className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <div className="p-1.5 bg-green-100 dark:bg-green-500/20 rounded-lg">
+                <Scissors className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               Silence Reduction
             </h3>
@@ -1029,7 +1029,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <div className="flex-1 min-w-0 w-full relative" ref={presetRef}>
                 <button
                   onClick={() => setIsPresetOpen(!isPresetOpen)}
-                  className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg pl-3 pr-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-sm transition-colors"
+                  className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg pl-3 pr-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 shadow-sm transition-colors"
                 >
                   <span className="truncate">{preset}</span>
                   <svg className={cn("w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-2", isPresetOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -1053,7 +1053,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                         className={cn(
                           "w-full text-left px-4 py-2.5 text-sm transition-colors",
                           preset === p 
-                            ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-medium" 
+                            ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 font-medium" 
                             : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
                         )}
                       >
@@ -1099,7 +1099,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                 onClick={() => setFullCrossfade(!fullCrossfade)}
                 className={cn(
                   "w-12 h-6 rounded-full transition-colors relative shadow-inner",
-                  fullCrossfade ? "bg-indigo-500" : "bg-slate-300 dark:bg-slate-700"
+                  fullCrossfade ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"
                 )}
               >
                 <div className={cn(
@@ -1113,7 +1113,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700/50 mt-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-500 dark:text-slate-400">Estimated Reduction</span>
-                {isAnalyzing && <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />}
+                {isAnalyzing && <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />}
               </div>
               <div className="flex items-end gap-2">
                 <span className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -1129,7 +1129,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             <button
               onClick={processAudio}
               disabled={!canProcess || isProcessing}
-              className="w-full mt-6 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-400 hover:to-indigo-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 relative overflow-hidden active:scale-[0.98]"
+              className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-green-500/20 transition-all flex items-center justify-center gap-2 relative overflow-hidden active:scale-[0.98]"
             >
               {isProcessing ? (
                 <>
@@ -1154,7 +1154,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/80">
             <h3 className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-4 text-sm uppercase tracking-wider">
-              <Zap className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+              <Zap className="w-4 h-4 text-green-500 dark:text-green-400" />
               Quick Tools
             </h3>
             <div className="grid grid-cols-2 gap-3">
