@@ -30,7 +30,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         {...getRootProps()}
         className={cn(
           "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ease-in-out flex flex-col items-center justify-center min-h-[250px]",
-          isDragActive ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20" : "border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-800/50",
+          isDragActive ? "border-green-500 bg-green-50/50 dark:bg-green-900/20" : "border-slate-200 dark:border-slate-700 hover:border-green-400 dark:hover:border-green-500 hover:bg-slate-50 dark:hover:bg-slate-800/50",
           isDragReject && "border-red-500 bg-red-50 dark:bg-red-900/20"
         )}
       >
@@ -38,7 +38,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         
         <div className={cn(
           "w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors duration-200",
-          isDragActive ? "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
+          isDragActive ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
           isDragReject && "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
         )}>
           {isDragReject ? (
@@ -57,7 +57,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
           Drag and drop your audio or video file here, or click to browse. Video files will have their audio automatically extracted.
         </p>
 
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow-sm transition-colors duration-200">
+        <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-sm transition-colors duration-200">
           Select File
         </button>
 
