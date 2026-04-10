@@ -702,7 +702,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
       const a = document.createElement('a');
       a.href = outUrl;
-      a.download = `processed_${file.name.split('.')[0]}.${exportFormat}`;
+      a.download = `silencio_${file.name.split('.')[0]}.${exportFormat}`;
       a.click();
 
       URL.revokeObjectURL(outUrl);
