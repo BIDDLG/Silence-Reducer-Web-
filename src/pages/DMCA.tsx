@@ -9,7 +9,7 @@ export function DMCA() {
         <p>Last updated: April 08, 2026</p>
         
         <section>
-          <p>Silencio respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at <a href="http://www.copyright.gov/legislation/dmca.pdf" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">http://www.copyright.gov/legislation/dmca.pdf</a>, we will respond expeditiously to claims of copyright infringement committed using the Silencio service.</p>
+          <p>Silencio respects the intellectual property rights of others and expects its users to do the same. In accordance with the Digital Millennium Copyright Act of 1998, the text of which may be found on the U.S. Copyright Office website at <a href="http://www.copyright.gov/legislation/dmca.pdf" target="_blank" rel="noopener noreferrer" className="text-green-600 dark:text-green-400 hover:underline">http://www.copyright.gov/legislation/dmca.pdf</a>, we will respond expeditiously to claims of copyright infringement committed using the Silencio service.</p>
           
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 p-4 rounded-lg mt-6 mb-6">
             <p className="text-amber-800 dark:text-amber-200 text-sm font-medium m-0">
@@ -43,7 +43,7 @@ export function DMCA() {
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">Contact Information</h2>
           <p>Deliver this Notice, with all items completed, to our Designated Copyright Agent:</p>
           <p className="mt-2 font-medium">
-            Email: <a href="mailto:royalkrrishna@gmail.com" className="text-indigo-600 dark:text-indigo-400 hover:underline">royalkrrishna@gmail.com</a>
+            Email: <a href="mailto:royalkrrishna@gmail.com" className="text-green-600 dark:text-green-400 hover:underline">royalkrrishna@gmail.com</a>
           </p>
         </section>
       </div>
