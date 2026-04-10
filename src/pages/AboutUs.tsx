@@ -32,7 +32,7 @@ export function AboutUs() {
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">Get in Touch</h2>
           <p>We hope you enjoy our tool as much as we enjoy offering it to you. If you have any questions or comments, please don't hesitate to contact us.</p>
           <p className="mt-4">
-            Email: <a href="mailto:royalkrrishna@gmail.com" className="text-indigo-600 dark:text-indigo-400 hover:underline">royalkrrishna@gmail.com</a>
+            Email: <a href="mailto:royalkrrishna@gmail.com" className="text-green-600 dark:text-green-400 hover:underline">royalkrrishna@gmail.com</a>
           </p>
         </section>
       </div>
