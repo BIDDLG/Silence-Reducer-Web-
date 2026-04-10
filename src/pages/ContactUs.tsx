@@ -15,7 +15,7 @@ export function ContactUs() {
             <div>
               <h3 className="font-medium text-slate-900 dark:text-white">Email Support</h3>
               <p className="mt-1">For general inquiries, support, or feedback, please email us at:</p>
-              <a href="mailto:royalkrrishna@gmail.com" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium text-lg mt-2 inline-block">
+              <a href="mailto:royalkrrishna@gmail.com" className="text-green-600 dark:text-green-400 hover:underline font-medium text-lg mt-2 inline-block">
                 royalkrrishna@gmail.com
               </a>
             </div>
