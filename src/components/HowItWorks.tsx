@@ -36,7 +36,7 @@ export function HowItWorks() {
           {steps.map((step, index) => (
             <div key={index} className="relative text-center">
               <div className="w-24 h-24 mx-auto bg-slate-800 rounded-full flex items-center justify-center mb-6 relative z-10 border-4 border-slate-900">
-                <span className="text-3xl font-bold text-indigo-400">{step.number}</span>
+                <span className="text-3xl font-bold text-green-400">{step.number}</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
               <p className="text-slate-400 leading-relaxed">{step.description}</p>
