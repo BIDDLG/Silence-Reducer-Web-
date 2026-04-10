@@ -659,7 +659,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     if (exportFormat === 'wav') {
       const a = document.createElement('a');
       a.href = processedAudioUrl;
-      a.download = `processed_${file.name.split('.')[0]}.wav`;
+      a.download = `silencio_${file.name.split('.')[0]}.wav`;
       a.click();
       return;
     }
