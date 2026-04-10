@@ -42,7 +42,7 @@ export function PrivacyPolicy() {
           <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mt-8 mb-4">6. Contact Us</h2>
           <p>If you have any questions about this Privacy Policy, You can contact us:</p>
           <ul className="list-disc pl-6 mt-2">
-            <li>By email: <a href="mailto:royalkrrishna@gmail.com" className="text-indigo-600 dark:text-indigo-400 hover:underline">royalkrrishna@gmail.com</a></li>
+            <li>By email: <a href="mailto:royalkrrishna@gmail.com" className="text-green-600 dark:text-green-400 hover:underline">royalkrrishna@gmail.com</a></li>
           </ul>
         </section>
       </div>
