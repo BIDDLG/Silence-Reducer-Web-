@@ -169,9 +169,9 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#cbd5e1',
-      progressColor: '#4f46e5',
-      cursorColor: '#312e81',
+      waveColor: '#E6FFE7',
+      progressColor: '#4CAF50',
+      cursorColor: '#1B5E20',
       barWidth: 2,
       barGap: 1,
       barRadius: 2,
