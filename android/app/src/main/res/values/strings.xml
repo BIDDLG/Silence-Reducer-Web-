@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Silencio</string>
+    <string name="hero_title">Remove Silence from Audio &amp; Video in One Click</string>
+    <string name="hero_subtitle">Automatically detect and remove silent pauses from your podcasts, lectures, voice notes, and interviews. 100% free, secure, and processed entirely on your device.</string>
+    <string name="upload_title">Upload Audio or Video</string>
+    <string name="upload_subtitle">Tap to browse your audio or video file here. Video files will have their audio automatically extracted.</string>
+    <string name="select_file">Select File</string>
+    <string name="upload_footer">MP3, WAV, MP4, WEBM, etc.\nUp to 500MB • 100% Private</string>
+    <string name="clear_project">Clear Project</string>
+    <string name="original_audio">Original Audio</string>
+    <string name="silence_reduction">Silence Reduction</string>
+    <string name="presets">Presets:</string>
+    <string name="threshold">Threshold (dB):</string>
+    <string name="duration">Duration (s):</string>
+    <string name="reduction">Reduction (%):</string>
+    <string name="maximum">Maximum (s):</string>
+    <string name="full_crossfade">Full crossfade:</string>
+    <string name="apply_reduction">Apply Silence Reduction</string>
+    <string name="quick_tools">QUICK TOOLS</string>
+    <string name="normalize">Normalize</string>
+    <string name="reverse">Reverse</string>
+    <string name="processing">Processing...</string>
+    <string name="ready">Ready</string>
+</resources>

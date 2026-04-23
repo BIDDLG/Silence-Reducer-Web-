@@ -25,17 +25,17 @@ export function FAQ() {
   ];
 
   return (
-    <section id="faq" className="py-12 bg-slate-50 dark:bg-slate-900 transition-colors">
+    <section id="faq" className="py-8 bg-slate-50 dark:bg-slate-950 transition-colors">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-50 mb-4">Frequently Asked Questions</h2>
         </div>
  
         <div className="space-y-6">
           {faqs.map((faq, index) => (
-            <div key={index} className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <div key={index} className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">{faq.q}</h3>
-              <p className="text-slate-600 dark:text-slate-400">{faq.a}</p>
+              <p className="text-slate-600 dark:text-slate-300">{faq.a}</p>
             </div>
           ))}
         </div>

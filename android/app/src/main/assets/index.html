@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Silencio</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon"><i data-lucide="music"></i></div>
+            <h1>Silencio</h1>
+        </div>
+        <button class="theme-toggle"><i data-lucide="sun"></i></button>
+    </header>
+
+    <main>
+        <!-- Upload View -->
+        <div id="upload-view" class="view active">
+            <h2 class="hero-title">Remove Silence from Audio & Video in One Click</h2>
+            <p class="hero-subtitle">Automatically detect and remove silent parts from your media files to save time and increase engagement.</p>
+            
+            <div class="upload-box" id="drop-zone">
+                <div class="upload-icon"><i data-lucide="upload-cloud"></i></div>
+                <h3>Upload your file</h3>
+                <p>Drag and drop your audio or video file here</p>
+                <input type="file" id="file-input" accept="audio/*,video/*" hidden>
+                <button class="btn primary" id="select-file-btn">Select File</button>
+                <p class="footer-text">Supports MP3, WAV, MP4, MOV and more up to 500MB</p>
+            </div>
+        </div>
+
+        <!-- Editor View -->
+        <div id="editor-view" class="view">
+            <!-- File Info Card -->
+            <div class="card file-info-card">
+                <div class="file-details">
+                    <div class="file-icon"><i data-lucide="headphones"></i></div>
+                    <div class="file-meta">
+                        <h4 id="file-name">input_temp</h4>
+                        <p id="file-size">Ready to process</p>
+                    </div>
+                </div>
+                <button class="btn text-danger" id="clear-project-btn"><i data-lucide="rotate-ccw"></i> Clear Project</button>
+            </div>
+
+            <!-- Waveform Card -->
+            <div class="card waveform-card">
+                <div class="card-header">
+                    <div class="header-left">
+                        <i data-lucide="activity" class="text-purple"></i>
+                        <h3>Original Audio</h3>
+                    </div>
+                </div>
+                <div class="time-display" id="time-display">0:00.00 / 0:00.00</div>
+                
+                <div class="waveform-container">
+                    <div class="waveform-bars"></div>
+                    <div class="progress-line" id="progress-line"></div>
+                </div>
+
+                <div class="playback-controls">
+                    <button class="icon-btn"><i data-lucide="zoom-out"></i></button>
+                    <span class="speed-text">1x</span>
+                    <button class="icon-btn"><i data-lucide="zoom-in"></i></button>
+                </div>
+                <div class="main-controls">
+                    <button class="icon-btn"><i data-lucide="repeat"></i></button>
+                    <button class="play-btn" id="play-btn"><i data-lucide="play" fill="currentColor"></i></button>
+                    <button class="icon-btn"><i data-lucide="fast-forward"></i></button>
+                </div>
+            </div>
+
+            <!-- Settings Card -->
+            <div class="card settings-card">
+                <div class="card-header">
+                    <div class="header-left">
+                        <i data-lucide="scissors" class="text-purple"></i>
+                        <h3>Silence Reduction</h3>
+                    </div>
+                    <i data-lucide="info" class="info-icon"></i>
+                </div>
+
+                <div class="setting-group preset-group">
+                    <label>Presets:</label>
+                    <select id="preset-select">
+                        <option value="eliminate">Eliminate all silences</option>
+                        <option value="default">Default</option>
+                        <option value="reduce50">Reduce silences 50%</option>
+                        <option value="halfsec">Reduce silences to half a second</option>
+                        <option value="shorten5">Shorten silences longer than 5 seconds</option>
+                    </select>
+                </div>
+
+                <!-- Sliders -->
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label>Threshold (dB):</label>
+                        <span class="value-badge" id="threshold-val">-40.00</span>
+                    </div>
+                    <div class="slider-control">
+                        <button class="circle-btn" onclick="adjustSlider('threshold', -1)"><i data-lucide="minus"></i></button>
+                        <input type="range" id="threshold" min="-60" max="0" step="1" value="-40">
+                        <button class="circle-btn" onclick="adjustSlider('threshold', 1)"><i data-lucide="plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label>Duration (s):</label>
+                        <span class="value-badge" id="duration-val">0.100</span>
+                    </div>
+                    <div class="slider-control">
+                        <button class="circle-btn" onclick="adjustSlider('duration', -0.1)"><i data-lucide="minus"></i></button>
+                        <input type="range" id="duration" min="0.1" max="5.0" step="0.1" value="0.1">
+                        <button class="circle-btn" onclick="adjustSlider('duration', 0.1)"><i data-lucide="plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label>Reduction (%):</label>
+                        <span class="value-badge" id="reduction-val">100</span>
+                    </div>
+                    <div class="slider-control">
+                        <button class="circle-btn" onclick="adjustSlider('reduction', -1)"><i data-lucide="minus"></i></button>
+                        <input type="range" id="reduction" min="0" max="100" step="1" value="100">
+                        <button class="circle-btn" onclick="adjustSlider('reduction', 1)"><i data-lucide="plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <label>Maximum (s):</label>
+                        <span class="value-badge" id="maximum-val">0.100</span>
+                    </div>
+                    <div class="slider-control">
+                        <button class="circle-btn" onclick="adjustSlider('maximum', -0.1)"><i data-lucide="minus"></i></button>
+                        <input type="range" id="maximum" min="0.1" max="5.0" step="0.1" value="0.1">
+                        <button class="circle-btn" onclick="adjustSlider('maximum', 0.1)"><i data-lucide="plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="toggle-group">
+                    <label>Full crossfade:</label>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div class="estimation-card">
+                    <p class="est-title">Estimated Reduction</p>
+                    <div class="est-value">
+                        <span class="big-time">0:00.00</span>
+                        <span class="small-text">saved</span>
+                    </div>
+                    <p class="est-desc">0 silent regions detected</p>
+                </div>
+
+                <button class="btn primary full-width" id="apply-btn">
+                    <i data-lucide="scissors"></i> Apply Silence Reduction
+                </button>
+
+                <div class="quick-tools">
+                    <h4><i data-lucide="zap"></i> QUICK TOOLS</h4>
+                    <div class="tool-buttons">
+                        <button class="btn secondary">Normalize</button>
+                        <button class="btn secondary">Reverse</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>

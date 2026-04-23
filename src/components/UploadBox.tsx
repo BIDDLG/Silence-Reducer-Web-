@@ -25,12 +25,12 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
   } as any);
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-2 transition-colors">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-2 transition-colors">
       <div
         {...getRootProps()}
         className={cn(
           "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 ease-in-out flex flex-col items-center justify-center min-h-[250px]",
-          isDragActive ? "border-green-500 bg-green-50/50 dark:bg-green-900/20" : "border-slate-200 dark:border-slate-700 hover:border-green-400 dark:hover:border-green-500 hover:bg-slate-50 dark:hover:bg-slate-800/50",
+          isDragActive ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10" : "border-slate-200 dark:border-slate-700 hover:border-emerald-400 dark:hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-800/50",
           isDragReject && "border-red-500 bg-red-50 dark:bg-red-900/20"
         )}
       >
@@ -38,7 +38,7 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
         
         <div className={cn(
           "w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors duration-200",
-          isDragActive ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400",
+          isDragActive ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-emerald-500",
           isDragReject && "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
         )}>
           {isDragReject ? (
@@ -50,14 +50,14 @@ export function UploadBox({ onUpload }: UploadBoxProps) {
           )}
         </div>
 
-        <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+        <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">
           {isDragActive ? "Drop your file here" : "Upload Audio or Video"}
         </h3>
         <p className="text-slate-500 dark:text-slate-400 mb-4 max-w-md mx-auto">
           Drag and drop your audio or video file here, or click to browse. Video files will have their audio automatically extracted.
         </p>
 
-        <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg shadow-sm transition-colors duration-200">
+        <button className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold py-3 px-8 rounded-xl shadow-sm transition-all duration-200">
           Select File
         </button>
 

@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { Play, Pause, Download, RotateCcw, Settings2, Scissors, Activity, FileAudio, Info, ZoomIn, ZoomOut, Repeat, FastForward, Volume2, Zap, Plus, Minus, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile } from '@ffmpeg/util';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 // Import lamejs as a raw string to inject it as a script
 // This avoids bundling issues with its internal require/MPEGMode
@@ -33,40 +33,91 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
-  useEffect(() => {
-    const loadFfmpeg = async () => {
+  const loadFfmpeg = useCallback(async () => {
+    if (isFfmpegLoaded) return;
+    try {
       const ffmpeg = ffmpegRef.current;
+      if (ffmpeg.loaded) {
+        setIsFfmpegLoaded(true);
+        return;
+      }
+
       ffmpeg.on('progress', ({ progress }) => {
         setExportProgress(Math.round(progress * 100));
       });
-      await ffmpeg.load();
+      
+      // Use jsdelivr but with a specific version known for stability in mobile/workers
+      const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+      });
       setIsFfmpegLoaded(true);
-    };
+    } catch (err) {
+      console.error("FFmpeg Load Error:", err);
+    }
+  }, [isFfmpegLoaded]);
+
+  useEffect(() => {
     loadFfmpeg().catch(console.error);
-  }, []);
+  }, [loadFfmpeg]);
 
   useEffect(() => {
     const url = URL.createObjectURL(file);
     setOriginalUrl(url);
+    setIsReady(false);
+    setHighQualityBuffer(null);
+    setProcessedAudioUrl(null);
+    setProcessedBuffer(null);
+    setDuration(0);
     
     let isCancelled = false;
     const decodeFile = async () => {
       try {
-        let arrayBuffer: ArrayBuffer;
+        let arrayBuffer: ArrayBuffer = await file.arrayBuffer();
 
-        if (file.type.startsWith('video/')) {
-          setProcessingStatus("Extracting audio from video...");
+        // Check if the file is empty
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error("Audio data khali hai ya corrupt ho gayi hai.");
+        }
+
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 44100 });
+        
+        try {
+          // Attempt NATIVE decoding first, even for video files
+          // Modern browsers can often extract audio from MP4/WebM containers directly
+          setProcessingStatus("Audio decode ho raha hai...");
+          const buffer = await ctx.decodeAudioData(arrayBuffer.slice(0)); // slice to avoid neutering if needed, although decodeAudioData usually neuters
+          if (!isCancelled) {
+            setHighQualityBuffer(buffer);
+            setProcessingStatus(null);
+            setIsProcessing(false);
+            return; // Success!
+          }
+        } catch (nativeDecodeErr) {
+          console.warn("Native decode failed, falling back to FFmpeg if video:", nativeDecodeErr);
+          
+          if (!file.type.startsWith('video/')) {
+             throw new Error("Audio file decode nahi ho pa rahi. Format check karein.");
+          }
+          
+          // Only if native decoding failed AND it's a video, try FFmpeg
+          setProcessingStatus("Video se audio nikal rahe hain (FFmpeg)...");
           setIsProcessing(true);
           
-          // Wait for ffmpeg to load
+          // Ensure ffmpeg is loaded
+          if (!ffmpegRef.current.loaded) {
+            await loadFfmpeg();
+          }
+          
           let attempts = 0;
-          while (!ffmpegRef.current.loaded && attempts < 100) {
+          while (!ffmpegRef.current.loaded && attempts < 200) {
             await new Promise(r => setTimeout(r, 100));
             attempts++;
           }
 
           if (!ffmpegRef.current.loaded) {
-            throw new Error("FFmpeg failed to load for video extraction");
+            throw new Error("FFmpeg load nahi ho paya. Internet connection check karein.");
           }
 
           const ffmpeg = ffmpegRef.current;
@@ -74,32 +125,41 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           const inputName = `input_video.${ext}`;
           const outputName = 'output_audio.wav';
 
-          await ffmpeg.writeFile(inputName, await fetchFile(file));
+          // FS Error usually happens if we write too much or invalid state
+          // Let's clear any old files just in case
+          try { await ffmpeg.deleteFile(inputName); } catch(e){}
+          try { await ffmpeg.deleteFile(outputName); } catch(e){}
+
+          await ffmpeg.writeFile(inputName, new Uint8Array(arrayBuffer));
           await ffmpeg.exec(['-i', inputName, '-vn', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', outputName]);
 
           const data = await ffmpeg.readFile(outputName);
-          arrayBuffer = (data as Uint8Array).buffer;
+          const wavBuffer = (data as Uint8Array).buffer;
 
           await ffmpeg.deleteFile(inputName);
           await ffmpeg.deleteFile(outputName);
           
+          const audioBuffer = await ctx.decodeAudioData(wavBuffer);
+          if (!isCancelled) {
+            setHighQualityBuffer(audioBuffer);
+          }
+        } finally {
+          if (ctx.state !== 'closed') {
+            ctx.close();
+          }
+          if (!isCancelled) {
+            setIsProcessing(false);
+            setProcessingStatus(null);
+          }
+        }
+      } catch (e: any) {
+        console.error("Error decoding high quality buffer", e);
+        if (!isCancelled) {
           setIsProcessing(false);
           setProcessingStatus(null);
-        } else {
-          arrayBuffer = await file.arrayBuffer();
+          const msg = e?.message || (typeof e === 'string' ? e : "Decoding error occurred");
+          alert("Error: " + msg);
         }
-
-        // Force 44.1kHz to prevent Bluetooth/OS downsampling
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 44100 });
-        const buffer = await ctx.decodeAudioData(arrayBuffer);
-        if (!isCancelled) {
-          setHighQualityBuffer(buffer);
-        }
-        if (ctx.state !== 'closed') {
-          ctx.close();
-        }
-      } catch (e) {
-        console.error("Error decoding high quality buffer", e);
       }
     };
     decodeFile();
@@ -169,9 +229,9 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
     const ws = WaveSurfer.create({
       container: containerRef.current,
-      waveColor: '#cbd5e1',
-      progressColor: '#4CAF50',
-      cursorColor: '#1B5E20',
+      waveColor: '#a7f3d0', // emerald-200
+      progressColor: '#10b981', // emerald-500
+      cursorColor: '#064e3b', // emerald-900
       barWidth: 2,
       barGap: 1,
       barRadius: 2,
@@ -188,8 +248,19 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     }
 
     ws.on('ready', () => {
+      const d = ws.getDuration();
+      if (d > 0) setDuration(d);
       setIsReady(true);
-      setDuration(ws.getDuration());
+    });
+
+    ws.on('loading', (percent) => {
+      if (percent === 100) {
+        // Force a small delay to ensure duration is available
+        setTimeout(() => {
+          const d = ws.getDuration();
+          if (d > 0) setDuration(d);
+        }, 100);
+      }
     });
 
     ws.on('audioprocess', () => {
@@ -659,7 +730,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     if (exportFormat === 'wav') {
       const a = document.createElement('a');
       a.href = processedAudioUrl;
-      a.download = `silencio_${file.name.split('.')[0]}.wav`;
+      a.download = `processed_${file.name.split('.')[0]}.wav`;
       a.click();
       return;
     }
@@ -702,7 +773,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
       const a = document.createElement('a');
       a.href = outUrl;
-      a.download = `silencio_${file.name.split('.')[0]}.${exportFormat}`;
+      a.download = `processed_${file.name.split('.')[0]}.${exportFormat}`;
       a.click();
 
       URL.revokeObjectURL(outUrl);
@@ -736,45 +807,46 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
     onChange: (v: number) => void,
     format?: (v: number) => string
   }) => (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
       <div className="flex justify-between items-center sm:w-32 shrink-0">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
-        <input 
-          type="number" 
-          value={format(value)}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="sm:hidden w-16 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-right text-slate-900 dark:text-white focus:outline-none focus:border-green-500 font-mono"
-        />
+        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{label}</label>
+        <div className="sm:hidden px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-mono text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+          {format(value)}
+        </div>
       </div>
-      <div className="flex items-center gap-3 flex-1 w-full">
+      <div className="flex items-center gap-3 flex-1 w-full bg-slate-50/50 dark:bg-slate-900/50 p-2 rounded-2xl border border-slate-100 dark:border-slate-800/50">
         <button 
           onClick={() => onChange(Math.max(min, value - step))}
-          className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-sm"
+          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 hover:border-emerald-300 hover:bg-emerald-50 active:scale-95 transition-all shadow-sm"
         >
           <Minus className="w-4 h-4" />
         </button>
-        <input 
-          type="range" 
-          min={min} 
-          max={max} 
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 accent-green-500 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
-        />
+        <div className="flex-1 px-2 flex items-center">
+          <input 
+            type="range" 
+            min={min} 
+            max={max} 
+            step={step}
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="w-full accent-emerald-500 h-2 bg-slate-200 dark:bg-slate-700 rounded-full appearance-none cursor-pointer"
+          />
+        </div>
         <button 
           onClick={() => onChange(Math.min(max, value + step))}
-          className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shadow-sm"
+          className="w-10 h-10 shrink-0 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 hover:border-emerald-300 hover:bg-emerald-50 active:scale-95 transition-all shadow-sm"
         >
           <Plus className="w-4 h-4" />
         </button>
       </div>
-      <input 
-        type="number" 
-        value={format(value)}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="hidden sm:block w-20 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-sm text-right text-slate-900 dark:text-white focus:outline-none focus:border-green-500 font-mono shadow-inner"
-      />
+      <div className="hidden sm:block w-20 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all">
+        <input 
+          type="number" 
+          value={format(value)}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="w-full bg-transparent text-right text-slate-800 dark:text-slate-200 focus:outline-none font-mono"
+        />
+      </div>
     </div>
   );
 
@@ -783,13 +855,13 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg flex items-center justify-center">
             <FileAudio className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[200px] sm:max-w-xs">{file.name}</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {(file.size / 1024 / 1024).toFixed(2)} MB • {canProcess ? formatTime(highQualityBuffer?.duration || 0) : 'Loading...'}
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[200px] sm:max-w-xs">{file.name}</h2>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400">
+              {(file.size / 1024 / 1024).toFixed(2)} MB • {isReady || duration > 0 ? formatTime(viewMode === 'original' ? (duration || highQualityBuffer?.duration || 0) : processedDuration) : 'Loading...'}
             </p>
           </div>
         </div>
@@ -809,19 +881,19 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
           <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex flex-wrap items-center gap-4">
-                <h3 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-green-500" />
+                <h3 className="font-semibold text-emerald-800 dark:text-emerald-100 flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-emerald-500" />
                   {viewMode === 'original' ? 'Original Audio' : 'Processed Audio'}
                 </h3>
                 {processedAudioUrl && (
-                  <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <div className="flex bg-emerald-100 dark:bg-emerald-800 p-1 rounded-lg">
                     <button 
                       onClick={() => setViewMode('original')}
                       className={cn(
                         "px-3 py-1 text-xs font-medium rounded-md transition-all",
                         viewMode === 'original' 
-                          ? "bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm" 
-                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                          ? "bg-white dark:bg-emerald-700 text-emerald-600 dark:text-emerald-400 shadow-sm" 
+                          : "text-emerald-500 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-200"
                       )}
                     >
                       Original
@@ -831,8 +903,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                       className={cn(
                         "px-3 py-1 text-xs font-medium rounded-md transition-all",
                         viewMode === 'processed' 
-                          ? "bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 shadow-sm" 
-                          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                          ? "bg-white dark:bg-emerald-700 text-emerald-600 dark:text-emerald-400 shadow-sm" 
+                          : "text-emerald-500 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-200"
                       )}
                     >
                       Processed
@@ -840,8 +912,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                   </div>
                 )}
               </div>
-              <div className="text-sm font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-md shrink-0">
-                {formatTime(currentTime)} / {formatTime(viewMode === 'original' ? (highQualityBuffer?.duration || 0) : processedDuration)}
+              <div className="text-sm font-mono text-emerald-500 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-800 px-3 py-1 rounded-md shrink-0">
+                {formatTime(currentTime)} / {formatTime(viewMode === 'original' ? (duration || highQualityBuffer?.duration || 0) : (processedDuration || duration))}
               </div>
             </div>
             
@@ -854,15 +926,15 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setZoom(Math.max(0.5, zoom - 0.5))}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                  className="p-2 text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                   title="Zoom Out"
                 >
                   <ZoomOut className="w-5 h-5" />
                 </button>
-                <span className="text-xs font-mono text-slate-400 w-8 text-center">{zoom}x</span>
+                <span className="text-xs font-mono text-emerald-400 w-8 text-center">{zoom}x</span>
                 <button
                   onClick={() => setZoom(Math.min(5, zoom + 0.5))}
-                  className="p-2 text-slate-500 dark:text-slate-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                  className="p-2 text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
                   title="Zoom In"
                 >
                   <ZoomIn className="w-5 h-5" />
@@ -872,7 +944,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setIsLooping(!isLooping)}
-                  className={cn("p-2 rounded-lg transition-colors", isLooping ? "text-green-600 bg-green-50 dark:bg-green-900/20" : "text-slate-500 hover:text-green-600 hover:bg-green-50")}
+                  className={cn("p-2 rounded-lg transition-colors", isLooping ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" : "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50")}
                   title="Loop Playback"
                 >
                   <Repeat className="w-5 h-5" />
@@ -880,13 +952,13 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                 <button
                   onClick={togglePlayPause}
                   disabled={!isReady}
-                  className="w-14 h-14 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-full shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-14 h-14 flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-md transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
                 </button>
                 <button
                   onClick={() => setPlaybackRate(playbackRate === 1 ? 1.5 : playbackRate === 1.5 ? 2 : 1)}
-                  className={cn("p-2 rounded-lg transition-colors flex items-center gap-1", playbackRate !== 1 ? "text-green-600 bg-green-50 dark:bg-green-900/20" : "text-slate-500 hover:text-green-600 hover:bg-green-50")}
+                  className={cn("p-2 rounded-lg transition-colors flex items-center gap-1", playbackRate !== 1 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20" : "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50")}
                   title="Playback Speed"
                 >
                   <FastForward className="w-5 h-5" />
@@ -895,7 +967,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               </div>
 
               <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 text-slate-400" />
+                <Volume2 className="w-4 h-4 text-emerald-400" />
                 <input 
                   type="range" 
                   min="0" 
@@ -903,7 +975,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                   step="0.05" 
                   value={volume}
                   onChange={(e) => setVolume(Number(e.target.value))}
-                  className="w-24 accent-green-600"
+                  className="w-24 accent-emerald-600"
                   title="Volume"
                 />
               </div>
@@ -912,19 +984,19 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
 
           {/* Results Card */}
           {processedAudioUrl && (
-            <div id="processed-audio-section" className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/30 dark:bg-emerald-950/10 transition-colors">
+            <div id="processed-audio-section" className="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                <h3 className="font-semibold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                  <Scissors className="w-5 h-5" />
+                <h3 className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <Scissors className="w-5 h-5 text-emerald-500" />
                   Processed Result
                 </h3>
                 <div className="flex flex-wrap items-center gap-2">
                   {stats && (
-                    <span className="hidden sm:inline-block text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                    <span className="hidden sm:inline-block text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100/50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800">
                       {stats.detected} silences found
                     </span>
                   )}
-                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-800">
                     Saved {formatTime(Math.max(0, (highQualityBuffer?.duration || 0) - processedDuration))}
                   </span>
                   <button 
@@ -933,7 +1005,7 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                       setProcessedBuffer(null);
                       setViewMode('original');
                     }}
-                    className="text-sm font-medium text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="text-sm font-medium text-emerald-500 hover:text-red-500 dark:text-emerald-400 dark:hover:text-red-400 px-3 py-1 rounded-full border border-slate-200 dark:border-slate-700 hover:border-red-200 dark:hover:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     Undo Changes
                   </button>
@@ -943,17 +1015,17 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 w-full flex items-center gap-4 bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
                   <div className="flex-1 relative" ref={exportFormatRef}>
-                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Export Format</p>
+                    <p className="text-xs font-medium text-emerald-500 dark:text-emerald-400 mb-1">Export Format</p>
                     <button
                       onClick={() => setIsExportFormatOpen(!isExportFormatOpen)}
-                      className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-slate-700 dark:text-slate-200 uppercase focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 shadow-sm transition-colors"
+                      className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-emerald-700 dark:text-emerald-200 uppercase focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm transition-colors"
                     >
                       <span>{exportFormat}</span>
-                      <svg className={cn("w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-2", isExportFormatOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                      <svg className={cn("w-4 h-4 text-emerald-500 transition-transform duration-200 shrink-0 ml-2", isExportFormatOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                     </button>
                     
                     {isExportFormatOpen && (
-                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1 bottom-full mb-1 sm:bottom-auto sm:mb-0 sm:top-full">
+                      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1 bottom-full mb-1 sm:bottom-auto sm:mb-0 sm:top-full animate-in fade-in zoom-in-95 duration-150 origin-bottom sm:origin-top">
                         {[
                           { id: 'wav', name: 'WAV', quality: 'Lossless (Original)' },
                           { id: 'mp3', name: 'MP3', quality: 'High (320kbps)' },
@@ -971,12 +1043,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                             className={cn(
                               "w-full flex items-center justify-between px-3 py-2 text-sm transition-colors",
                               exportFormat === fmt.id 
-                                ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 font-bold" 
-                                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium"
+                                ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold" 
+                                : "text-slate-900 dark:text-slate-50 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium"
                             )}
                           >
                             <span className="uppercase">{fmt.id}</span>
-                            <span className="text-xs font-normal text-slate-500 dark:text-slate-400">{fmt.quality}</span>
+                            <span className="text-xs font-normal text-emerald-500 dark:text-emerald-400">{fmt.quality}</span>
                           </button>
                         ))}
                       </div>
@@ -1010,33 +1082,33 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
         </div>
 
         {/* Settings Panel */}
-        <div className="lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 h-fit transition-colors">
+        <div className="lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 p-4 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 h-fit transition-colors">
           <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 dark:border-slate-800">
             <h3 className="font-semibold flex items-center gap-2 text-lg">
-              <div className="p-1.5 bg-green-100 dark:bg-green-500/20 rounded-lg">
-                <Scissors className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <div className="p-1.5 bg-emerald-100 dark:bg-emerald-500/20 rounded-lg">
+                <Scissors className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               Silence Reduction
             </h3>
-            <button className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+            <button className="text-emerald-400 hover:text-emerald-600 dark:hover:text-white transition-colors p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-800 rounded-lg">
               <Info className="w-5 h-5" />
             </button>
           </div>
 
           <div className="space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-6 bg-slate-50 dark:bg-slate-900/50 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-700/50">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-6 bg-slate-50 dark:bg-slate-950 p-3 sm:p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 w-full sm:w-24 shrink-0">Presets:</label>
               <div className="flex-1 min-w-0 w-full relative" ref={presetRef}>
                 <button
                   onClick={() => setIsPresetOpen(!isPresetOpen)}
-                  className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg pl-3 pr-3 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 shadow-sm transition-colors"
+                  className="w-full flex items-center justify-between bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-lg pl-3 pr-3 py-2.5 text-sm text-emerald-900 dark:text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-sm transition-colors"
                 >
                   <span className="truncate">{preset}</span>
-                  <svg className={cn("w-4 h-4 text-slate-500 transition-transform duration-200 shrink-0 ml-2", isPresetOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  <svg className={cn("w-4 h-4 text-emerald-500 transition-transform duration-200 shrink-0 ml-2", isPresetOpen ? "rotate-180" : "")} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                 </button>
                 
                 {isPresetOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1">
+                  <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-150 origin-top">
                     {[
                       "Default",
                       "Eliminate all silences",
@@ -1053,8 +1125,8 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
                         className={cn(
                           "w-full text-left px-4 py-2.5 text-sm transition-colors",
                           preset === p 
-                            ? "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 font-medium" 
-                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                            ? "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium" 
+                            : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50"
                         )}
                       >
                         {p}
@@ -1094,12 +1166,12 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             />
 
             <div className="flex items-center justify-between py-4 mt-2">
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Full crossfade:</label>
+              <label className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Full crossfade:</label>
               <button 
                 onClick={() => setFullCrossfade(!fullCrossfade)}
                 className={cn(
                   "w-12 h-6 rounded-full transition-colors relative shadow-inner",
-                  fullCrossfade ? "bg-green-500" : "bg-slate-300 dark:bg-slate-700"
+                  fullCrossfade ? "bg-emerald-500" : "bg-emerald-200 dark:bg-emerald-700"
                 )}
               >
                 <div className={cn(
@@ -1110,26 +1182,38 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             </div>
 
             {/* Estimated Stats Display */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700/50 mt-4">
+            <div className="bg-slate-50 dark:bg-slate-950 rounded-lg p-4 border border-slate-200 dark:border-slate-800 mt-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-slate-500 dark:text-slate-400">Estimated Reduction</span>
-                {isAnalyzing && <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />}
+                <span className="text-sm text-emerald-600 dark:text-emerald-400">Estimated Reduction</span>
+                {isAnalyzing && <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />}
               </div>
               <div className="flex items-end gap-2">
-                <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                <span className="text-2xl font-bold text-slate-900 dark:text-slate-50">
                   {estimatedStats ? formatTime(estimatedStats.removed) : "0:00.00"}
                 </span>
-                <span className="text-sm text-slate-500 dark:text-slate-400 mb-1">saved</span>
+                <span className="text-sm text-emerald-600 dark:text-emerald-400 mb-1">saved</span>
               </div>
-              <div className="text-xs text-slate-500 mt-1">
-                {estimatedStats ? `${estimatedStats.detected} silent regions detected` : "Analyzing audio..."}
+              <div className="text-xs text-emerald-500 dark:text-emerald-400 mt-1">
+                {isProcessing && processingStatus ? (
+                  <span className="flex items-center gap-1.5 line-clamp-1">
+                    <div className="w-2 h-2 shrink-0 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    {processingStatus}
+                  </span>
+                ) : (
+                  !highQualityBuffer ? "Audio load nahi hua hai" : (estimatedStats ? `${estimatedStats.detected} silent regions detected` : "Analyzing audio...")
+                )}
               </div>
             </div>
 
             <button
               onClick={processAudio}
               disabled={!canProcess || isProcessing}
-              className="w-full mt-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-green-500/20 transition-all flex items-center justify-center gap-2 relative overflow-hidden active:scale-[0.98]"
+              className={cn(
+                "w-full mt-6 font-semibold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 relative overflow-hidden",
+                (!canProcess || isProcessing) 
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-50" 
+                  : "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+              )}
             >
               {isProcessing ? (
                 <>
@@ -1152,23 +1236,23 @@ export function AudioEditor({ file, onReset }: AudioEditorProps) {
             )}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700/80">
-            <h3 className="font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2 mb-4 text-sm uppercase tracking-wider">
-              <Zap className="w-4 h-4 text-green-500 dark:text-green-400" />
+          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-50 flex items-center gap-2 mb-4 text-sm uppercase tracking-wider">
+              <Zap className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
               Quick Tools
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={normalizeAudio}
                 disabled={!canProcess || isProcessing}
-                className="bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-700 dark:text-slate-200 font-medium py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-600/50 hover:border-slate-300 dark:hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
+                className="bg-slate-50 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 disabled:opacity-50 text-emerald-800 dark:text-emerald-200 font-medium py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600 transition-all text-sm flex items-center justify-center gap-2 shadow-sm active:scale-95"
               >
                 Normalize
               </button>
               <button
                 onClick={reverseAudio}
                 disabled={!canProcess || isProcessing}
-                className="bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 text-slate-700 dark:text-slate-200 font-medium py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-600/50 hover:border-slate-300 dark:hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2 shadow-sm"
+                className="bg-slate-50 dark:bg-slate-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 disabled:opacity-50 text-emerald-800 dark:text-emerald-200 font-medium py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600 transition-all text-sm flex items-center justify-center gap-2 shadow-sm active:scale-95"
               >
                 Reverse
               </button>
