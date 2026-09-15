@@ -2,1584 +2,1074 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="description" content="Silencio automatically removes silence and dead air from audio and video files.">
-<meta name="theme-color" content="#070912">
-
-<title>Silencio — Remove Silence Automatically</title>
-
-<!-- Favicon will also be loaded automatically from Google Play -->
-<link id="favicon" rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%238067ff'/%3E%3Cpath d='M19 14v36M19 32 46 15M19 32l27 17' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<title>Silencio — Remove Silence from Audio & Video</title>
 
 <style>
-:root{
---bg:#070912;
---bg2:#0b0f1b;
---card:rgba(255,255,255,.055);
---card2:rgba(255,255,255,.08);
---line:rgba(255,255,255,.10);
---text:#f7f8ff;
---muted:#9da5ba;
---p:#8067ff;
---c:#19d9ff;
---green:#35e49b;
---r:24px;
---max:1050px;
-}
-
 *{
-box-sizing:border-box;
-margin:0;
-padding:0;
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
 }
 
 html{
-scroll-behavior:smooth;
+  scroll-behavior:smooth;
 }
 
 body{
-font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-color:var(--text);
-background:
-radial-gradient(700px 450px at 8% -10%,rgba(128,103,255,.22),transparent 65%),
-radial-gradient(650px 450px at 95% 0%,rgba(25,217,255,.13),transparent 65%),
-var(--bg);
-line-height:1.6;
-overflow-x:hidden;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#07110c;
+  color:#fff;
+  overflow-x:hidden;
 }
 
 a{
-text-decoration:none;
-color:inherit;
+  color:inherit;
+  text-decoration:none;
 }
 
-svg{
-display:block;
+.container{
+  width:min(1120px,calc(100% - 40px));
+  margin:auto;
 }
 
-.wrap{
-width:min(var(--max),92%);
-margin:auto;
+/* =========================
+   NAVBAR
+========================= */
+
+.nav-wrap{
+  padding:22px 0;
 }
 
-/* Disable mouse cursor */
-*,*::before,*::after{
-cursor:none!important;
-}
-
-/* ================= HEADER ================= */
-
-.top{
-position:fixed;
-z-index:100;
-top:0;
-left:0;
-right:0;
-height:72px;
-background:rgba(7,9,18,.94);
-border-bottom:1px solid var(--line);
-backdrop-filter:blur(14px);
--webkit-backdrop-filter:blur(14px);
-}
-
-.nav{
-height:100%;
-display:flex;
-align-items:center;
-justify-content:space-between;
+nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
 }
 
 .brand{
-display:flex;
-align-items:center;
-gap:11px;
-font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:-.5px;
 }
 
-.brandmark{
-width:43px;
-height:43px;
-border-radius:14px;
-display:grid;
-place-items:center;
-background:linear-gradient(135deg,var(--p),var(--c));
-box-shadow:0 0 30px rgba(128,103,255,.28);
-overflow:hidden;
+.brand-icon{
+  width:38px;
+  height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  background:linear-gradient(135deg,#18e66f,#0ab957);
+  box-shadow:0 8px 30px rgba(24,230,111,.22);
 }
 
-.brandmark img{
-width:100%;
-height:100%;
-object-fit:cover;
-display:none;
-border-radius:14px;
+.brand-icon svg{
+  width:23px;
+  height:23px;
 }
 
-.brandmark svg{
-width:26px;
-height:26px;
+.play-nav{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px 16px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  color:#dfffe9;
+  font-size:14px;
+  font-weight:700;
+  transition:.25s ease;
 }
 
-.brandtext{
-font-size:15px;
-line-height:1.1;
+.play-nav:hover{
+  background:rgba(24,230,111,.1);
+  border-color:rgba(24,230,111,.35);
+  transform:translateY(-1px);
 }
 
-.brandtext small{
-display:block;
-font-size:8px;
-letter-spacing:1.5px;
-color:#858da4;
-font-weight:700;
-margin-top:4px;
+.play-nav svg{
+  width:16px;
+  height:16px;
 }
 
-.links{
-display:flex;
-align-items:center;
-gap:25px;
-}
-
-.links a{
-font-size:13px;
-color:#b8bfd0;
-transition:.2s;
-}
-
-.links a:hover{
-color:#fff;
-}
-
-.menu{
-display:none;
-border:0;
-background:none;
-color:white;
-}
-
-.menu svg{
-width:27px;
-height:27px;
-}
-
-/* ================= HERO ================= */
+/* =========================
+   HERO
+========================= */
 
 .hero{
-min-height:100vh;
-padding:125px 0 75px;
-display:grid;
-place-items:center;
+  position:relative;
+  padding:75px 0 80px;
 }
 
-.heroGrid{
-display:grid;
-grid-template-columns:1fr .85fr;
-gap:55px;
-align-items:center;
+.hero:before{
+  content:"";
+  position:absolute;
+  width:600px;
+  height:600px;
+  left:50%;
+  top:-250px;
+  transform:translateX(-50%);
+  background:radial-gradient(
+    circle,
+    rgba(24,230,111,.13) 0%,
+    rgba(24,230,111,.045) 35%,
+    transparent 70%
+  );
+  pointer-events:none;
+}
+
+.hero-inner{
+  position:relative;
+  text-align:center;
+  max-width:850px;
+  margin:auto;
 }
 
 .badge{
-display:inline-flex;
-align-items:center;
-gap:8px;
-padding:8px 12px;
-border:1px solid var(--line);
-border-radius:999px;
-background:rgba(255,255,255,.04);
-font-size:12px;
-color:#cdd3e2;
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 14px;
+  border:1px solid rgba(24,230,111,.22);
+  background:rgba(24,230,111,.07);
+  border-radius:999px;
+  color:#aaffc7;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:25px;
 }
 
-.pulse{
-width:7px;
-height:7px;
-background:var(--green);
-border-radius:50%;
-box-shadow:0 0 14px var(--green);
+.badge-dot{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#18e66f;
+  box-shadow:0 0 12px rgba(24,230,111,.9);
 }
 
 h1{
-font-size:clamp(48px,7vw,78px);
-line-height:1.02;
-letter-spacing:-4px;
-margin:20px 0;
+  font-size:clamp(44px,7vw,78px);
+  line-height:.98;
+  letter-spacing:-4px;
+  font-weight:900;
 }
 
-.grad{
-background:linear-gradient(100deg,#fff 15%,#a28eff 52%,#65eaff);
-color:transparent;
-background-clip:text;
--webkit-background-clip:text;
+.gradient{
+  background:linear-gradient(90deg,#18e66f,#8affb4);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
 }
 
-.hero p{
-max-width:650px;
-font-size:18px;
-color:var(--muted);
+.subtitle{
+  max-width:680px;
+  margin:25px auto 0;
+  color:#9caea4;
+  font-size:17px;
+  line-height:1.7;
 }
 
-.buttons{
-display:flex;
-gap:12px;
-flex-wrap:wrap;
-margin-top:30px;
+.subtitle strong{
+  color:#eafff0;
 }
 
-.btn{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-gap:9px;
-padding:14px 19px;
-border-radius:14px;
-border:1px solid var(--line);
-background:rgba(255,255,255,.045);
-font-size:13px;
-font-weight:750;
-transition:.25s;
+/* =========================
+   APP CARD
+========================= */
+
+.app-card{
+  max-width:560px;
+  margin:45px auto 0;
+  padding:1px;
+  border-radius:28px;
+  background:linear-gradient(
+    145deg,
+    rgba(24,230,111,.4),
+    rgba(255,255,255,.06),
+    rgba(24,230,111,.12)
+  );
+  box-shadow:0 30px 100px rgba(0,0,0,.4);
 }
 
-.btn svg{
-width:17px;
-height:17px;
+.app-card-inner{
+  padding:34px 30px 27px;
+  border-radius:27px;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(24,230,111,.1),
+      transparent 45%
+    ),
+    #0b1711;
 }
 
-.btn.primary{
-border-color:transparent;
-background:linear-gradient(135deg,var(--p),#5b87ff);
+.app-logo{
+  width:94px;
+  height:94px;
+  margin:0 auto 18px;
+  border-radius:23px;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#12251a;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:
+    0 15px 40px rgba(0,0,0,.35),
+    0 0 0 5px rgba(24,230,111,.035);
 }
 
-.btn:hover{
-transform:translateY(-3px);
-box-shadow:0 14px 35px rgba(0,0,0,.28);
+.app-logo img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
 }
 
-/* ================= HERO ART ================= */
-
-.heroArt{
-min-height:410px;
-position:relative;
-display:grid;
-place-items:center;
+.app-logo-fallback{
+  width:52px;
+  height:52px;
 }
 
-.core{
-width:280px;
-height:280px;
-border-radius:50%;
-background:
-radial-gradient(circle at 34% 25%,#e2dcff 0 4%,transparent 23%),
-linear-gradient(145deg,#7356ff,#14d6ed);
-box-shadow:0 0 65px rgba(112,91,255,.24);
-animation:levitate 6s ease-in-out infinite;
+.app-name{
+  font-size:27px;
+  font-weight:850;
+  letter-spacing:-1px;
 }
 
-.ring{
-position:absolute;
-width:370px;
-height:370px;
-border:1px solid rgba(255,255,255,.11);
-border-radius:50%;
-animation:spin 36s linear infinite;
+.app-description{
+  margin-top:7px;
+  color:#8fa096;
+  font-size:14px;
 }
 
-.ring:before,
-.ring:after{
-content:"";
-position:absolute;
-width:9px;
-height:9px;
-border-radius:50%;
-background:#fff;
+/* =========================
+   GOOGLE PLAY BUTTON
+========================= */
+
+.download-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin-top:25px;
+  padding:12px 21px;
+  border-radius:13px;
+  background:#18e66f;
+  color:#041009;
+  box-shadow:
+    0 12px 30px rgba(24,230,111,.2),
+    inset 0 1px 0 rgba(255,255,255,.3);
+  transition:.25s ease;
 }
 
-.ring:before{
-top:20px;
-left:50%;
+.download-btn:hover{
+  transform:translateY(-2px);
+  background:#31ed7e;
+  box-shadow:
+    0 16px 38px rgba(24,230,111,.28);
 }
 
-.ring:after{
-bottom:35px;
-right:8%;
+.play-icon{
+  width:27px;
+  height:27px;
+  fill:currentColor;
+  flex:none;
 }
 
-.float{
-position:absolute;
-display:inline-flex;
-align-items:center;
-gap:7px;
-padding:11px 14px;
-border:1px solid var(--line);
-background:rgba(11,15,27,.88);
-border-radius:14px;
-font-size:12px;
-color:#dce1ee;
-box-shadow:0 18px 45px rgba(0,0,0,.3);
+.download-text{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  line-height:1;
 }
 
-.float svg{
-width:16px;
-height:16px;
+.download-small{
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:1.2px;
+  opacity:.7;
 }
 
-.f1{
-top:10%;
-left:0;
+.download-big{
+  margin-top:3px;
+  font-size:17px;
+  font-weight:850;
+  letter-spacing:-.3px;
 }
 
-.f2{
-top:30%;
-right:0;
-}
-
-.f3{
-bottom:12%;
-left:9%;
-}
-
-/* ================= APP SECTION ================= */
-
-section{
-padding:95px 0;
-scroll-margin-top:85px;
-}
-
-.head{
-text-align:center;
-margin-bottom:35px;
-}
-
-.head h2{
-font-size:38px;
-letter-spacing:-1.5px;
-margin-bottom:7px;
-}
-
-.head p{
-max-width:620px;
-margin:auto;
-font-size:14px;
-color:var(--muted);
-}
-
-/* ================= APP CARD ================= */
-
-.appArea{
-display:flex;
-justify-content:center;
-}
-
-.app{
-width:min(650px,100%);
-position:relative;
-padding:34px;
-border:1px solid var(--line);
-border-radius:26px;
-background:
-linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
-box-shadow:0 25px 70px rgba(0,0,0,.25);
-overflow:hidden;
-text-align:center;
-}
-
-.app:before{
-content:"";
-position:absolute;
-width:250px;
-height:250px;
-background:rgba(128,103,255,.13);
-filter:blur(70px);
-top:-100px;
-left:50%;
-transform:translateX(-50%);
-pointer-events:none;
-}
-
-.appIcon{
-position:relative;
-width:120px;
-height:120px;
-margin:0 auto 22px;
-border-radius:29px;
-overflow:hidden;
-background:#151b2b;
-border:1px solid rgba(255,255,255,.09);
-box-shadow:0 20px 50px rgba(0,0,0,.35);
-}
-
-.appIcon img{
-width:100%;
-height:100%;
-object-fit:cover;
-display:block;
-}
-
-.iconLoading{
-position:absolute;
-inset:0;
-display:grid;
-place-items:center;
-background:#151b2b;
-}
-
-.spinner{
-width:25px;
-height:25px;
-border:2px solid rgba(255,255,255,.12);
-border-top-color:#a99cff;
-border-radius:50%;
-animation:spinSmall .8s linear infinite;
-}
-
-.app h3{
-position:relative;
-font-size:28px;
-line-height:1.25;
-margin-bottom:6px;
-}
-
-.category{
-position:relative;
-display:inline-flex;
-align-items:center;
-gap:6px;
-font-size:12px;
-color:#a99cff;
-font-weight:700;
-margin-bottom:15px;
-}
-
-.category svg{
-width:14px;
-height:14px;
-}
-
-.appDescription{
-position:relative;
-max-width:520px;
-margin:auto;
-color:var(--muted);
-font-size:14px;
-}
+/* =========================
+   FEATURES
+========================= */
 
 .features{
-position:relative;
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin:28px 0;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-top:28px;
 }
 
 .feature{
-padding:13px 8px;
-border:1px solid var(--line);
-border-radius:14px;
-background:rgba(255,255,255,.035);
+  display:flex;
+  align-items:center;
+  text-align:left;
+  gap:11px;
+  padding:14px 11px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:15px;
+  background:rgba(255,255,255,.025);
 }
 
-.feature svg{
-width:20px;
-height:20px;
-margin:0 auto 6px;
-color:#a99cff;
+.feature-icon{
+  width:36px;
+  height:36px;
+  flex:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:10px;
+  background:rgba(24,230,111,.08);
+  color:#5aff98;
 }
 
-.feature span{
-display:block;
-font-size:11px;
-color:#cdd2df;
+.feature-icon svg{
+  width:20px;
+  height:20px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
 }
 
-.playButton{
-position:relative;
-display:inline-flex;
-align-items:center;
-justify-content:center;
-gap:9px;
-padding:14px 25px;
-border-radius:14px;
-background:linear-gradient(135deg,var(--p),#5b87ff);
-font-size:13px;
-font-weight:800;
-transition:.25s;
-box-shadow:0 12px 35px rgba(91,111,255,.2);
+.feature-title{
+  font-size:12px;
+  font-weight:800;
+  color:#e9fff0;
 }
 
-.playButton svg{
-width:18px;
-height:18px;
+.feature-text{
+  margin-top:3px;
+  font-size:10px;
+  color:#728279;
 }
 
-.playButton:hover{
-transform:translateY(-3px);
-box-shadow:0 18px 45px rgba(91,111,255,.3);
+.bottom-note{
+  margin-top:24px;
+  font-size:11px;
+  color:#66746b;
 }
 
-/* ================= INFO ================= */
-
-.infoGrid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:15px;
-}
-
-.infoCard{
-padding:23px;
-border:1px solid var(--line);
-border-radius:20px;
-background:var(--card);
-}
-
-.infoIcon{
-width:42px;
-height:42px;
-display:grid;
-place-items:center;
-border-radius:12px;
-background:rgba(128,103,255,.12);
-color:#a99cff;
-margin-bottom:15px;
-}
-
-.infoIcon svg{
-width:21px;
-height:21px;
-}
-
-.infoCard h3{
-font-size:16px;
-margin-bottom:6px;
-}
-
-.infoCard p{
-font-size:13px;
-color:var(--muted);
-}
-
-/* ================= FOOTER ================= */
+/* =========================
+   FOOTER
+========================= */
 
 footer{
-border-top:1px solid var(--line);
-padding:28px 0;
-color:#7f879a;
-font-size:12px;
+  padding:25px 0 35px;
+  text-align:center;
+  color:#58655d;
+  font-size:12px;
+  border-top:1px solid rgba(255,255,255,.045);
 }
 
-.foot{
-display:flex;
-justify-content:space-between;
-gap:15px;
-flex-wrap:wrap;
-}
+/* =========================
+   LOADING
+========================= */
 
-/* ================= BACK BUTTON ================= */
-
-#back{
-position:fixed;
-right:18px;
-bottom:18px;
-width:43px;
-height:43px;
-border:1px solid var(--line);
-background:rgba(12,16,28,.92);
-border-radius:13px;
-color:white;
-display:none;
-place-items:center;
-z-index:50;
-}
-
-#back svg{
-width:20px;
-height:20px;
-}
-
-/* ================= ANIMATIONS ================= */
-
-@keyframes levitate{
-50%{
-transform:translateY(-14px);
-}
+.logo-loading{
+  width:27px;
+  height:27px;
+  border:2px solid rgba(255,255,255,.12);
+  border-top-color:#18e66f;
+  border-radius:50%;
+  animation:spin .8s linear infinite;
 }
 
 @keyframes spin{
-to{
-transform:rotate(360deg);
-}
-}
-
-@keyframes spinSmall{
-to{
-transform:rotate(360deg);
-}
+  to{
+    transform:rotate(360deg);
+  }
 }
 
-/* ================= MOBILE ================= */
-
-@media(max-width:800px){
-
-.heroGrid{
-grid-template-columns:1fr;
-gap:20px;
-text-align:center;
-}
-
-.hero p{
-margin:auto;
-}
-
-.buttons{
-justify-content:center;
-}
-
-.heroArt{
-min-height:330px;
-}
-
-.infoGrid{
-grid-template-columns:1fr;
-}
-
-}
+/* =========================
+   RESPONSIVE
+========================= */
 
 @media(max-width:650px){
 
-.top{
-height:66px;
+  .container{
+    width:min(100% - 26px,1120px);
+  }
+
+  .nav-wrap{
+    padding:15px 0;
+  }
+
+  .brand{
+    font-size:18px;
+  }
+
+  .brand-icon{
+    width:35px;
+    height:35px;
+    border-radius:11px;
+  }
+
+  .play-nav{
+    padding:9px 12px;
+    font-size:12px;
+  }
+
+  .hero{
+    padding:55px 0 60px;
+  }
+
+  h1{
+    font-size:48px;
+    letter-spacing:-2.8px;
+  }
+
+  .subtitle{
+    font-size:15px;
+    line-height:1.65;
+    padding:0 5px;
+  }
+
+  .app-card{
+    margin-top:35px;
+    border-radius:23px;
+  }
+
+  .app-card-inner{
+    padding:28px 17px 23px;
+    border-radius:22px;
+  }
+
+  .features{
+    grid-template-columns:1fr;
+    gap:8px;
+  }
+
+  .feature{
+    padding:12px;
+  }
 }
 
-.brandmark{
-width:40px;
-height:40px;
-}
+@media(max-width:390px){
 
-.links{
-position:absolute;
-top:66px;
-left:4%;
-right:4%;
-display:flex;
-flex-direction:column;
-align-items:stretch;
-gap:0;
-padding:0 16px;
-background:#070912;
-border:1px solid transparent;
-border-radius:0 0 18px 18px;
-max-height:0;
-opacity:0;
-visibility:hidden;
-overflow:hidden;
-transform:translateY(-8px);
-transition:.3s;
-}
+  h1{
+    font-size:43px;
+  }
 
-.links.open{
-max-height:250px;
-opacity:1;
-visibility:visible;
-transform:translateY(0);
-padding:10px 16px;
-border-color:var(--line);
-}
-
-.links a{
-font-size:14px;
-padding:12px 4px;
-border-bottom:1px solid rgba(255,255,255,.06);
-}
-
-.links a:last-child{
-border-bottom:0;
-}
-
-.menu{
-display:block;
-}
-
-.hero{
-padding-top:110px;
-}
-
-.heroArt{
-min-height:290px;
-}
-
-.core{
-width:205px;
-height:205px;
-}
-
-.ring{
-width:275px;
-height:275px;
-}
-
-.f1{
-left:0;
-}
-
-.f2{
-right:0;
-}
-
-.f3{
-left:4%;
-}
-
-h1{
-letter-spacing:-2.5px;
-}
-
-section{
-padding:70px 0;
-}
-
-.app{
-padding:27px 19px;
-}
-
-.appIcon{
-width:105px;
-height:105px;
-}
-
-.app h3{
-font-size:25px;
-}
-
-.features{
-grid-template-columns:1fr;
-}
-
-}
-
-/* Hide broken image */
-img.broken{
-display:none!important;
+  .play-nav span:first-child{
+    display:none;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<header class="top">
-<div class="wrap nav">
+<!-- =========================
+     NAVIGATION
+========================= -->
 
-<a class="brand" href="#home">
+<div class="nav-wrap">
+  <div class="container">
 
-<div class="brandmark">
+    <nav>
 
-<img id="brandIcon" alt="Silencio">
+      <a
+        class="brand"
+        href="https://play.google.com/store/apps/details?id=com.royaletech.silencio"
+        target="_blank"
+        rel="noopener"
+      >
 
-<svg id="brandFallback"
-viewBox="0 0 64 64"
-fill="none"
-aria-hidden="true">
-<path
-d="M19 14v36M19 32 46 15M19 32l27 17"
-stroke="white"
-stroke-width="7"
-stroke-linecap="round"
-stroke-linejoin="round"/>
-</svg>
+        <span class="brand-icon">
 
-</div>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M8 7v10c0 1.1.9 2 2 2h1V5h-1c-1.1 0-2 .9-2 2Z"
+              fill="white"
+            />
 
-<div class="brandtext">
-Silencio
-<small>ROYAL eTECH</small>
-</div>
+            <path
+              d="M12 5h1c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2h-1V5Z"
+              fill="white"
+              opacity=".75"
+            />
 
-</a>
+            <path
+              d="M16.5 8.5v7"
+              stroke="white"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              opacity=".55"
+            />
+          </svg>
 
-<nav class="links">
+        </span>
 
-<a href="#home">Home</a>
-<a href="#app">App</a>
-<a href="#features">Features</a>
-<a href="#support">Support</a>
+        Silencio
 
-</nav>
-
-<button
-class="menu"
-aria-label="Open menu"
-aria-expanded="false"
-onclick="toggleMenu()">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M4 7h16M4 12h16M4 17h16"
-stroke="currentColor"
-stroke-width="2"
-stroke-linecap="round"/>
-</svg>
-
-</button>
-
-</div>
-</header>
+      </a>
 
 
-<main>
+      <a
+        class="play-nav"
+        href="https://play.google.com/store/apps/details?id=com.royaletech.silencio"
+        target="_blank"
+        rel="noopener"
+      >
 
-<!-- ================= HERO ================= -->
+        <span>Get the app</span>
 
-<section class="hero" id="home">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M5 19 19 5"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          />
 
-<div class="wrap heroGrid">
+          <path
+            d="M9 5h10v10"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
 
-<div>
+      </a>
 
-<div class="badge">
-<span class="pulse"></span>
-Audio & Video Silence Remover
-</div>
+    </nav>
 
-<h1>
-Remove silence.
-<span class="grad">Keep the content.</span>
-</h1>
-
-<p>
-Silencio automatically removes unwanted silence and dead air from audio and video files, helping you create shorter, cleaner and more engaging content.
-</p>
-
-<div class="buttons">
-
-<a
-class="btn primary"
-href="#app">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M8 5v14l11-7L8 5Z"
-fill="currentColor"/>
-</svg>
-
-Explore Silencio
-
-</a>
-
-<a
-class="btn"
-href="https://play.google.com/store/apps/details?id=com.royaletech.silencio"
-target="_blank"
-rel="noopener">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M6 3.8v16.4L18.5 12 6 3.8Z"
-stroke="currentColor"
-stroke-width="1.7"
-stroke-linejoin="round"/>
-</svg>
-
-Google Play
-
-</a>
-
-</div>
-
+  </div>
 </div>
 
 
-<div class="heroArt">
+<!-- =========================
+     HERO
+========================= -->
 
-<div class="core"></div>
-<div class="ring"></div>
+<section class="hero">
 
-<div class="float f1">
+  <div class="container">
 
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="M9 9h6M9 13h4M9 17h6"
-stroke="currentColor"
-stroke-width="1.6"
-stroke-linecap="round"/>
-</svg>
+    <div class="hero-inner">
 
-Audio Editing
-
-</div>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Audio &amp; Video Silence Remover
+      </div>
 
 
-<div class="float f2">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M5 12h2l2-7 4 14 2-7h4"
-stroke="currentColor"
-stroke-width="1.7"
-stroke-linecap="round"
-stroke-linejoin="round"/>
-</svg>
-
-Smart Silence Removal
-
-</div>
+      <h1>
+        Cut the silence.<br>
+        <span class="gradient">Keep the content.</span>
+      </h1>
 
 
-<div class="float f3">
+      <p class="subtitle">
+        <strong>Silencio</strong> automatically removes unwanted silence
+        and dead air from your audio and videos, helping you get straight
+        to the content that matters.
+      </p>
 
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M4 7h16v10H4z"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="m10 10 5 2-5 2v-4Z"
-fill="currentColor"/>
-</svg>
 
-Video Support
+      <!-- APP CARD -->
 
-</div>
+      <div class="app-card">
 
-</div>
+        <div class="app-card-inner">
 
-</div>
+          <!--
+            Play Store logo is inserted here automatically
+            by JavaScript.
+          -->
+
+          <div class="app-logo" id="appLogo">
+
+            <div class="logo-loading" id="logoLoading"></div>
+
+          </div>
+
+
+          <div class="app-name">
+            Silencio
+          </div>
+
+
+          <div class="app-description">
+            Remove silence from audio &amp; video automatically
+          </div>
+
+
+          <!-- GOOGLE PLAY -->
+
+          <a
+            class="download-btn"
+            href="https://play.google.com/store/apps/details?id=com.royaletech.silencio"
+            target="_blank"
+            rel="noopener"
+            aria-label="Get Silencio on Google Play"
+          >
+
+            <svg
+              class="play-icon"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+
+              <path
+                d="M3.5 2.8 14.7 12 3.5 21.2c-.3-.4-.5-.9-.5-1.5V4.3c0-.6.2-1.1.5-1.5Z"
+              />
+
+              <path
+                d="M15.7 12.8 18.4 15l-2.7 2.2-2.8-2.3 2.8-2.1Z"
+                opacity=".8"
+              />
+
+              <path
+                d="M18.4 9 15.7 11.2l-2.8-2.1L15.7 7l2.7 2Z"
+                opacity=".6"
+              />
+
+            </svg>
+
+
+            <span class="download-text">
+
+              <span class="download-small">
+                GET IT ON
+              </span>
+
+              <span class="download-big">
+                Google Play
+              </span>
+
+            </span>
+
+          </a>
+
+
+          <!-- FEATURES -->
+
+          <div class="features">
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                  <path d="M4 10v4"/>
+
+                  <path d="M7 7v10"/>
+
+                  <path d="M10 9v6"/>
+
+                  <path d="M14 9v6"/>
+
+                  <path d="M17 7v10"/>
+
+                  <path d="M20 10v4"/>
+
+                  <path d="M2.5 3.5 21.5 20.5"/>
+
+                </svg>
+
+              </div>
+
+
+              <div>
+
+                <div class="feature-title">
+                  Remove Silence
+                </div>
+
+                <div class="feature-text">
+                  Automatically
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                  <path d="M4 9v6"/>
+
+                  <path d="M7 7v10"/>
+
+                  <path d="M10 5v14"/>
+
+                  <path d="M14 8v8"/>
+
+                  <path d="M17 6v12"/>
+
+                  <path d="M20 10v4"/>
+
+                </svg>
+
+              </div>
+
+
+              <div>
+
+                <div class="feature-title">
+                  Audio
+                </div>
+
+                <div class="feature-text">
+                  Clean &amp; concise
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="feature">
+
+              <div class="feature-icon">
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                  <rect
+                    x="3"
+                    y="5"
+                    width="18"
+                    height="14"
+                    rx="2"
+                  />
+
+                  <path d="m10 9 5 3-5 3V9Z"/>
+
+                </svg>
+
+              </div>
+
+
+              <div>
+
+                <div class="feature-title">
+                  Video
+                </div>
+
+                <div class="feature-text">
+                  Cut dead air
+                </div>
+
+              </div>
+
+            </div>
+
+
+          </div>
+
+
+          <div class="bottom-note">
+            Available on Android · Free to use
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
 
 </section>
 
 
-<!-- ================= APP ================= -->
-
-<section id="app">
-
-<div class="wrap">
-
-<div class="head">
-
-<h2>Silencio</h2>
-
-<p>
-A simple tool designed to remove unwanted silence from your audio and video files automatically.
-</p>
-
-</div>
-
-
-<div class="appArea">
-
-<div class="app">
-
-<div class="appIcon">
-
-<div class="iconLoading" id="iconLoading">
-
-<div class="spinner"></div>
-
-</div>
-
-<img
-id="appIcon"
-alt="Silencio app icon"
-style="display:none">
-
-</div>
-
-
-<h3 id="appName">
-Silencio
-</h3>
-
-
-<div class="category">
-
-<svg viewBox="0 0 24 24" fill="none">
-<rect
-x="5"
-y="3"
-width="14"
-height="18"
-rx="2"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="M9 7h6M9 17h6"
-stroke="currentColor"
-stroke-width="1.6"
-stroke-linecap="round"/>
-</svg>
-
-Android App
-
-</div>
-
-
-<p class="appDescription" id="appDescription">
-Remove silence and dead air from your audio and video files with Silencio.
-</p>
-
-
-<div class="features" id="features">
-
-<div class="feature">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M5 12h2l2-7 4 14 2-7h4"
-stroke="currentColor"
-stroke-width="1.7"
-stroke-linecap="round"
-stroke-linejoin="round"/>
-</svg>
-
-<span>Silence Removal</span>
-
-</div>
-
-
-<div class="feature">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M4 7h16v10H4z"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="m10 10 5 2-5 2v-4Z"
-fill="currentColor"/>
-</svg>
-
-<span>Audio & Video</span>
-
-</div>
-
-
-<div class="feature">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M12 3v4M5.6 5.6l2.8 2.8M3 12h4M5.6 18.4l2.8-2.8M12 21v-4M18.4 18.4l-2.8-2.8M21 12h-4M18.4 5.6l-2.8 2.8"
-stroke="currentColor"
-stroke-width="1.7"
-stroke-linecap="round"/>
-<circle
-cx="12"
-cy="12"
-r="3.5"
-stroke="currentColor"
-stroke-width="1.7"/>
-</svg>
-
-<span>Automatic Processing</span>
-
-</div>
-
-</div>
-
-
-<a
-class="playButton"
-href="https://play.google.com/store/apps/details?id=com.royaletech.silencio"
-target="_blank"
-rel="noopener">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M6 3.8v16.4L18.5 12 6 3.8Z"
-fill="currentColor"/>
-</svg>
-
-Get Silencio on Google Play
-
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-<!-- ================= SUPPORT ================= -->
-
-<section id="support">
-
-<div class="wrap">
-
-<div class="head">
-
-<h2>Built for Better Content</h2>
-
-<p>
-Silencio is useful wherever unnecessary silence makes audio or video longer than it needs to be.
-</p>
-
-</div>
-
-
-<div class="infoGrid">
-
-<div class="infoCard">
-
-<div class="infoIcon">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M4 6h16v12H4z"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="M8 10h8M8 14h5"
-stroke="currentColor"
-stroke-width="1.6"
-stroke-linecap="round"/>
-</svg>
-
-</div>
-
-<h3>Podcasts</h3>
-
-<p>
-Reduce long pauses and dead air to make conversations more concise.
-</p>
-
-</div>
-
-
-<div class="infoCard">
-
-<div class="infoIcon">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M4 7h16v10H4z"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="m10 10 5 2-5 2v-4Z"
-fill="currentColor"/>
-</svg>
-
-</div>
-
-<h3>Video Editing</h3>
-
-<p>
-Remove unnecessary silent portions from videos and speed up the editing workflow.
-</p>
-
-</div>
-
-
-<div class="infoCard">
-
-<div class="infoIcon">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M6 4h12v16H6z"
-stroke="currentColor"
-stroke-width="1.6"/>
-<path
-d="M9 8h6M9 12h4M9 16h6"
-stroke="currentColor"
-stroke-width="1.6"
-stroke-linecap="round"/>
-</svg>
-
-</div>
-
-<h3>Voice Recordings</h3>
-
-<p>
-Clean up recordings by reducing unwanted silent sections automatically.
-</p>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-</main>
-
+<!-- =========================
+     FOOTER
+========================= -->
 
 <footer>
-
-<div class="wrap foot">
-
-<span>
-© <span id="year"></span> Silencio · ROYAL eTECH
-</span>
-
-<span>
-Audio & Video Silence Removal
-</span>
-
-</div>
-
+  © Silencio. All rights reserved.
 </footer>
-
-
-<a
-id="back"
-href="#home"
-aria-label="Back to top">
-
-<svg viewBox="0 0 24 24" fill="none">
-<path
-d="M12 19V5m-6 6 6-6 6 6"
-stroke="currentColor"
-stroke-width="2"
-stroke-linecap="round"
-stroke-linejoin="round"/>
-</svg>
-
-</a>
 
 
 <script>
 
-/* =========================================================
-   SILENCIO PLAY STORE CONFIG
-========================================================= */
+/*
+==========================================================
+  SILENCIO PLAY STORE LOGO AUTO FETCH
+==========================================================
 
-const PACKAGE_NAME = "com.royaletech.silencio";
+  Package:
+  com.royaletech.silencio
 
-const PLAY_URL =
-"https://play.google.com/store/apps/details?id=" +
-PACKAGE_NAME;
+  The code reads the Play Store page through a public
+  CORS-friendly proxy and extracts the Play Store
+  og:image / app icon.
+
+  No Silencio logo URL is hardcoded.
+==========================================================
+*/
+
+(function(){
+
+  const PLAY_STORE_URL =
+    "https://play.google.com/store/apps/details?id=com.royaletech.silencio&hl=en&gl=US";
+
+  const PROXY_URL =
+    "https://api.allorigins.win/raw?url=" +
+    encodeURIComponent(PLAY_STORE_URL);
+
+  const logoBox =
+    document.getElementById("appLogo");
+
+  const loading =
+    document.getElementById("logoLoading");
 
 
-/* =========================================================
-   AUTOMATIC GOOGLE PLAY ICON FETCH
-=========================================================
+  function showFallback(){
 
-   We don't hardcode the play-lh.googleusercontent URL.
+    if(loading){
+      loading.remove();
+    }
 
-   The script:
-   1. Opens the Google Play listing through Jina.
-   2. Reads the Play Store HTML.
-   3. Finds og:image.
-   4. Uses that image as the app icon.
-   5. Uses the same image as the favicon.
+    logoBox.innerHTML = `
+      <svg
+        class="app-logo-fallback"
+        viewBox="0 0 48 48"
+        fill="none"
+        aria-hidden="true"
+      >
 
-========================================================= */
+        <rect
+          x="8"
+          y="13"
+          width="10"
+          height="22"
+          rx="5"
+          fill="white"
+        />
 
-async function fetchPlayStoreData(){
+        <rect
+          x="20"
+          y="8"
+          width="8"
+          height="32"
+          rx="4"
+          fill="white"
+          opacity=".9"
+        />
 
-    const appIcon =
-        document.getElementById("appIcon");
+        <rect
+          x="30"
+          y="13"
+          width="10"
+          height="22"
+          rx="5"
+          fill="white"
+          opacity=".72"
+        />
 
-    const brandIcon =
-        document.getElementById("brandIcon");
+      </svg>
+    `;
+  }
 
-    const brandFallback =
-        document.getElementById("brandFallback");
 
-    const loading =
-        document.getElementById("iconLoading");
-
-    const appName =
-        document.getElementById("appName");
-
-    const appDescription =
-        document.getElementById("appDescription");
-
-    const favicon =
-        document.getElementById("favicon");
-
+  function isValidGoogleImage(url){
 
     try{
 
-        const playPage =
-            "https://play.google.com/store/apps/details?id=" +
-            encodeURIComponent(PACKAGE_NAME) +
-            "&hl=en&gl=US";
+      const parsed =
+        new URL(url);
+
+      return (
+        parsed.protocol === "https:" &&
+        (
+          parsed.hostname === "play-lh.googleusercontent.com" ||
+          parsed.hostname === "lh3.googleusercontent.com" ||
+          parsed.hostname.endsWith(".googleusercontent.com")
+        )
+      );
+
+    }catch(e){
+
+      return false;
+
+    }
+  }
 
 
-        /*
-         * Jina Reader converts the Play Store page
-         * into readable HTML/text and allows the browser
-         * to request it without directly scraping
-         * Google Play.
-         */
+  async function fetchPlayStoreLogo(){
 
-        const proxyURL =
-            "https://r.jina.ai/" + playPage;
+    try{
 
+      const response =
+        await fetch(PROXY_URL,{
+          method:"GET",
+          cache:"no-store"
+        });
 
-        const response =
-            await fetch(proxyURL,{
-                method:"GET",
-                cache:"no-store"
-            });
+      if(!response.ok){
+        throw new Error("Play Store request failed");
+      }
 
+      const html =
+        await response.text();
 
-        if(!response.ok){
-            throw new Error(
-                "Play Store request failed"
-            );
-        }
+      if(!html){
+        throw new Error("Empty Play Store response");
+      }
 
 
-        const html =
-            await response.text();
+      const parser =
+        new DOMParser();
+
+      const doc =
+        parser.parseFromString(
+          html,
+          "text/html"
+        );
 
 
-        /*
-         * Extract og:image.
-         */
+      /*
+        First preference:
+        Open Graph image.
+      */
 
-        const imageMatch =
-            html.match(
-                /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i
-            )
-            ||
-            html.match(
-                /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i
-            );
+      let image =
+        doc.querySelector(
+          'meta[property="og:image"]'
+        );
 
 
-        if(imageMatch && imageMatch[1]){
-
-            const iconURL =
-                imageMatch[1]
-                .replace(/&amp;/g,"&");
-
-
-            appIcon.src = iconURL;
-            appIcon.style.display = "block";
-
-            brandIcon.src = iconURL;
-            brandIcon.style.display = "block";
-
-            brandFallback.style.display = "none";
-
-            loading.style.display = "none";
-
-            /*
-             * Use Play Store icon as favicon.
-             */
-
-            favicon.href = iconURL;
-
-        }else{
-
-            throw new Error(
-                "Google Play icon not found"
-            );
-
-        }
+      let imageUrl =
+        image
+          ? image.getAttribute("content")
+          : null;
 
 
-        /*
-         * Try to get the actual Play Store title.
-         */
+      /*
+        Second preference:
+        itemprop image.
+      */
 
-        const titleMatch =
-            html.match(
-                /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i
-            )
-            ||
-            html.match(
-                /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i
-            );
+      if(!imageUrl){
 
+        image =
+          doc.querySelector(
+            'meta[itemprop="image"]'
+          );
 
-        if(titleMatch && titleMatch[1]){
+        imageUrl =
+          image
+            ? image.getAttribute("content")
+            : null;
 
-            let title =
-                titleMatch[1]
-                .replace(/&amp;/g,"&")
-                .trim();
+      }
 
 
-            /*
-             * Remove common Google Play suffixes.
-             */
+      /*
+        Third preference:
+        twitter image.
+      */
 
-            title =
-                title
-                .replace(/\s*-\s*Apps on Google Play.*$/i,"")
-                .trim();
+      if(!imageUrl){
 
+        image =
+          doc.querySelector(
+            'meta[name="twitter:image"]'
+          );
 
-            if(title){
-                appName.textContent = title;
-            }
+        imageUrl =
+          image
+            ? image.getAttribute("content")
+            : null;
 
-        }
-
-
-        /*
-         * Try to get Play Store description.
-         */
-
-        const descriptionMatch =
-            html.match(
-                /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i
-            )
-            ||
-            html.match(
-                /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i
-            );
+      }
 
 
-        if(
-            descriptionMatch &&
-            descriptionMatch[1]
-        ){
+      if(!imageUrl || !isValidGoogleImage(imageUrl)){
 
-            let description =
-                descriptionMatch[1]
-                .replace(/&amp;/g,"&")
-                .replace(/&#39;/g,"'")
-                .replace(/&quot;/g,'"')
-                .trim();
+        throw new Error(
+          "Google Play logo was not found"
+        );
+
+      }
 
 
-            if(description){
-                appDescription.textContent =
-                    description;
-            }
+      /*
+        Create image only after URL validation.
+      */
 
-        }
+      const img =
+        new Image();
+
+      img.alt =
+        "Silencio app logo";
+
+      img.decoding =
+        "async";
+
+      img.loading =
+        "eager";
+
+      img.onload =
+        function(){
+
+          if(loading){
+            loading.remove();
+          }
+
+          logoBox.innerHTML = "";
+
+          logoBox.appendChild(img);
+
+        };
+
+
+      img.onerror =
+        function(){
+
+          showFallback();
+
+        };
+
+
+      img.src =
+        imageUrl;
 
     }catch(error){
 
-        console.log(
-            "Silencio Play Store fetch:",
-            error
-        );
+      console.warn(
+        "Silencio Play Store logo fetch failed:",
+        error
+      );
 
-        /*
-         * If automatic fetching fails,
-         * keep the built-in fallback icon.
-         */
-
-        loading.style.display = "none";
+      showFallback();
 
     }
 
-}
+  }
 
 
-/* =========================================================
-   MOBILE MENU
-========================================================= */
+  fetchPlayStoreLogo();
 
-function toggleMenu(){
-
-    const links =
-        document.querySelector(".links");
-
-    const button =
-        document.querySelector(".menu");
-
-    const open =
-        links.classList.toggle("open");
-
-    button.setAttribute(
-        "aria-expanded",
-        open ? "true" : "false"
-    );
-
-}
-
-
-/* Close mobile menu after navigation */
-
-document
-.querySelectorAll(".links a")
-.forEach(function(link){
-
-    link.addEventListener(
-        "click",
-        function(){
-
-            document
-            .querySelector(".links")
-            .classList.remove("open");
-
-            document
-            .querySelector(".menu")
-            .setAttribute(
-                "aria-expanded",
-                "false"
-            );
-
-        }
-    );
-
-});
-
-
-/* =========================================================
-   YEAR
-========================================================= */
-
-document.getElementById("year")
-.textContent =
-new Date().getFullYear();
-
-
-/* =========================================================
-   BACK TO TOP
-========================================================= */
-
-const back =
-document.getElementById("back");
-
-let scrollTick = false;
-
-window.addEventListener(
-"scroll",
-function(){
-
-    if(scrollTick) return;
-
-    scrollTick = true;
-
-    requestAnimationFrame(
-        function(){
-
-            back.style.display =
-                window.scrollY > 500
-                ? "grid"
-                : "none";
-
-            scrollTick = false;
-
-        }
-    );
-
-},
-{passive:true}
-);
-
-
-/* =========================================================
-   DISABLE RIGHT CLICK
-========================================================= */
-
-document.addEventListener(
-"contextmenu",
-function(e){
-    e.preventDefault();
-}
-);
-
-
-/* =========================================================
-   START AUTOMATIC PLAY STORE FETCH
-========================================================= */
-
-fetchPlayStoreData();
+})();
 
 </script>
 
